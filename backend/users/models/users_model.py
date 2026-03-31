@@ -21,18 +21,21 @@ class UserModel(models.Model):
     profile_image = models.ImageField(
         blank=True,
         null=True,
+        default='default_images/profile.jpg',
         upload_to='profiles_images/',
     )
 
     profile_banner = models.ImageField(
         blank=True,
         null=True,
+        default='default_images/banner.png',
         upload_to='profiles_banners/',
     )
 
     bio = models.TextField(
     blank=True,
     null=True,
+    max_length=900
     )
 
     created_at = models.DateField(
@@ -56,6 +59,8 @@ class UserModel(models.Model):
     def follow(self, target_user):
         if target_user != self and not self.is_following(target_user):
             self.following.add(target_user)
+            return True
+        return False
     
     # Logic to unfollow someone
     def unfollow(self, target_user):
