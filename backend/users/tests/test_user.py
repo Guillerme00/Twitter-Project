@@ -1,6 +1,7 @@
 import pytest
 from django.core.exceptions import ValidationError
 from users.factories.user_factory import UserFactory
+from users.serializers import UserSerializer
 
 def test_following(db):
     user1 = UserFactory()
@@ -41,3 +42,24 @@ def test_write_more_than_allowed(db):
 
     with pytest.raises(ValidationError):
         user.full_clean()
+
+def test_serializer_user_name_validation(db):
+    data = {
+        'name': "guilherme",
+        'user_name': "guilherme00",
+        'birthday': '2000-01-01'
+    }
+
+    serializer = UserSerializer(data=data)
+    assert serializer.is_valid()
+
+def test_serializer_user_name_validation_with_wrong_user_name(db):
+    data = {
+        'name': "guilherme",
+        'user_name': "guilherme 00",
+        'birthday': '2000-01-01'
+    }
+
+    serializer = UserSerializer(data=data)
+    assert not serializer.is_valid()
+    assert "user_name" in serializer.errors
