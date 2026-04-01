@@ -2,6 +2,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from users.factories.user_factory import UserFactory
 from users.serializers import UserSerializer
+from rest_framework.test import APIClient
 
 def test_following(db):
     user1 = UserFactory()
@@ -10,7 +11,6 @@ def test_following(db):
     assert not user1.is_following(user2)
     user1.follow(user2)
     assert user1.is_following(user2)
-
 
 def test_unfollowing(db):
     user1 = UserFactory()
@@ -21,13 +21,10 @@ def test_unfollowing(db):
     user1.unfollow(user2)
     assert not user1.is_following(user2)
 
-
-
 def test_dont_follow_yourself(db):
     user1 = UserFactory()
 
     assert not user1.follow(user1)
-
 
 def test_follow_someone_twice(db):
     user1 = UserFactory()
@@ -43,23 +40,151 @@ def test_write_more_than_allowed(db):
     with pytest.raises(ValidationError):
         user.full_clean()
 
-def test_serializer_user_name_validation(db):
+def test_serializer_username_validation(db):
     data = {
         'name': "guilherme",
-        'user_name': "guilherme00",
-        'birthday': '2000-01-01'
+        'username': "guilherme00",
+        'birthday': '2000-01-01',
+        'password': 'password12345'
     }
 
     serializer = UserSerializer(data=data)
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
 
-def test_serializer_user_name_validation_with_wrong_user_name(db):
+def test_serializer_username_validation_with_wrong_username(db):
     data = {
         'name': "guilherme",
-        'user_name': "guilherme 00",
-        'birthday': '2000-01-01'
+        'username': "guilherme 00",
+        'birthday': '2000-01-01',
+        'password': "password12345"
     }
 
     serializer = UserSerializer(data=data)
     assert not serializer.is_valid()
-    assert "user_name" in serializer.errors
+    assert "username" in serializer.errors
+
+def test_followers_cont(db):
+    user1 = UserFactory()
+    user2 = UserFactory()
+
+    user1.follow(user2)
+
+    assert user1.followers.count() == 0
+    assert user2.followers.count() == 1
+
+def test_unfollowing_not_following(db):
+    user1 = UserFactory()
+    user2 = UserFactory()
+
+    assert not user1.is_following(user2)
+    user1.unfollow(user2)
+    assert not user1.is_following(user2)
+
+def test_follow_again_return_false(db):
+
+    user1 = UserFactory()
+    user2 = UserFactory()
+
+    assert user1.follow(user2) == True
+    assert user1.follow(user2) == False
+
+def test_api_get_requisition(db):
+    client = APIClient()
+
+    user = UserFactory()
+    client.force_authenticate(user=user)
+
+    response = client.get('/api/users/', format='json')
+
+    assert response.status_code == 200
+
+def test_api_post_requisition(db):
+    client = APIClient()
+    user = UserFactory.build()
+    client.force_authenticate(user=user)
+
+    data = {
+        'username': user.username,
+        'name': user.name,
+        'password': user.password,
+        'birthday': user.birthday
+    }
+
+    response = client.post("/api/users/", data, format="json")
+    assert response.status_code == 201
+
+def test_user1_follow_user2(db):
+    user1 = UserFactory()
+    user2 = UserFactory()
+
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.post(f"/api/users/{user2.pk}/follow/", format="json")
+
+    assert response.status_code == 200
+
+def test_user1_unfollow_user2(db):
+    user1 = UserFactory()
+    user2 = UserFactory()
+
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    client.post(f"/api/users/{user2.pk}/follow/", format="json")
+    response = client.post(f"/api/users/{user2.pk}/unfollow/", format="json")
+
+    assert response.status_code == 200
+
+def test_user1_cant_follow_yourself(db):
+    user1 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+    response = client.post(f"/api/users/{user1.pk}/follow/", format="json")
+    assert response.status_code == 400
+
+def test_user1_cant_unfollow_yourself(db):
+    user1 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+    response = client.post(f"/api/users/{user1.pk}/unfollow/", format="json")
+    assert response.status_code == 400
+
+def test_user1_cant_follow_twice(db):
+    user1 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+    client.post(f"/api/users/{user1.pk}/follow/", format="json")
+    response = client.post(f"/api/users/{user1.pk}/follow/", format="json")
+    assert response.status_code == 400
+
+def test_get_single_user(db):
+    user1 = UserFactory()
+
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.get(f"/api/users/{user1.pk}/", format="json")
+    assert response.status_code == 200
+
+def test_delete_user(db):
+    user1 = UserFactory()
+
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.delete(f"/api/users/{user1.pk}/", format="json")
+
+    assert response.status_code == 204
+
+def test_search_inexistent_user(db):
+    user1 = UserFactory()
+
+    client = APIClient()
+    client.force_authenticate(user=user1)
+    
+    client.delete(f"/api/users/{user1.pk}/", format="json")
+
+    response = client.get(f"/api/users/{user1.pk}/", format="json")
+
+    assert response.status_code == 404

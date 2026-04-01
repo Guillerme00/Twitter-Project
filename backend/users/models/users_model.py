@@ -1,9 +1,7 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
-class UserModel(models.Model):
-    active = models.BooleanField(
-        default=True,
-        )
+class UserModel(AbstractUser):
     
     name = models.CharField(
         max_length=120,
@@ -11,12 +9,6 @@ class UserModel(models.Model):
         null=False,
         )
     
-    user_name = models.CharField(
-        max_length=120,
-        blank=False,
-        null=False,
-        unique=True
-    )
 
     profile_image = models.ImageField(
         blank=True,
@@ -42,7 +34,10 @@ class UserModel(models.Model):
         auto_now_add=True
     )
 
-    birthday = models.DateField()
+    birthday = models.DateField(
+        blank=False,
+        null=False
+        )
 
     following = models.ManyToManyField(
         "self",
@@ -66,6 +61,8 @@ class UserModel(models.Model):
     def unfollow(self, target_user):
         if target_user != self:
             self.following.remove(target_user)
+            return True
+        return False
 
     def __str__(self):
-        return self.user_name
+        return self.username
