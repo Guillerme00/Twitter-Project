@@ -17,9 +17,19 @@ class UserSerializer(serializers.ModelSerializer):
         if ' ' in value:
             raise serializers.ValidationError("The username cannot contain spaces.")
         return value
+    
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = UserModel(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
 
     # Classes
     class Meta:
         model = UserModel
-        fields = "__all__"
+        fields = ["name", "username", "profile_image", "profile_banner", "bio", "followers_count", "following_count"]
         read_only_fields = ['created_at', 'id']
+        extra_kwargs = {
+            'password': {"write_only": True}
+        }
