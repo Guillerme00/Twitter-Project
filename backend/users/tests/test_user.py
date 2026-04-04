@@ -188,3 +188,74 @@ def test_search_inexistent_user(db):
     response = client.get(f"/api/users/{user1.pk}/", format="json")
 
     assert response.status_code == 404
+
+def test_token_response_from_auth(db):
+    user1 = UserFactory()
+    client = APIClient()
+
+    response = client.post('/api/token/', {
+        'username': user1.username,
+        'password': "senha123"
+    })
+
+    assert response.status_code == 200
+    assert 'access' in response.data
+    assert 'refresh' in response.data
+
+def test_refresh_token(db):
+    user1 = UserFactory()
+    client = APIClient()
+
+    response = client.post("/api/token/", {
+        'username': user1.username,
+        'password': "senha123"
+    })
+
+    response2 = client.post("/api/token/refresh/", {
+        "refresh": f"{response.data["refresh"]}"
+    })
+
+    assert response2.status_code == 200
+    assert "access" in response.data
+
+def test_acess_token_works(db):
+    user1 = UserFactory()
+    client = APIClient()
+
+    response = client.post("/api/token/", {
+        'username': user1.username,
+        'password': "senha123"
+    })
+
+    client.credentials(HTTP_AUTHORIZATION="Bearer " + response.data["access"])
+
+    response2 = client.get("/api/users/")
+
+    assert response2.status_code == 200
+    assert user1.name == response2.data[0]["name"]
+
+
+def test_refresh_token_works(db):
+    user1 = UserFactory()
+    client = APIClient()
+
+    response = client.post("/api/token/", {
+        'username': user1.username,
+        'password': "senha123"
+    })
+
+    response2 = client.post("/api/token/refresh/", {
+        'refresh': f"{response.data["refresh"]}"
+    })
+    
+    client.credentials(HTTP_AUTHORIZATION="Bearer " + response2.data["access"])
+
+    response3 = client.get("/api/users/")
+
+    assert response3.status_code == 200
+    assert user1.name == response3.data[0]["name"]
+
+def test_access_without_token(db):
+    client = APIClient()
+    response = client.get("/api/users/")
+    assert response.status_code == 401

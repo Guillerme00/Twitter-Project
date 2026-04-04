@@ -19,17 +19,18 @@ class UserSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
-        password = validated_data.pop('password')
+        password = validated_data.pop('password', None)
         user = UserModel(**validated_data)
-        user.set_password(password)
+        if password:
+            user.set_password(password)
         user.save()
         return user
 
     # Classes
     class Meta:
         model = UserModel
-        fields = ["name", "username", "profile_image", "profile_banner", "bio", "followers_count", "following_count"]
+        fields = ["name", "username", "profile_image", "profile_banner", "bio", "followers_count", "following_count", "password", "birthday"]
         read_only_fields = ['created_at', 'id']
         extra_kwargs = {
-            'password': {"write_only": True}
+            'password': {"write_only": True, "required":True}
         }

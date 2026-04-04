@@ -4,7 +4,7 @@ from users.models import UserModel
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = UserModel
-        skip_postgeneration_save = True
+        skip_postgeneration_save = False
     
     name = factory.Faker('name')
     username = factory.Faker('user_name')
