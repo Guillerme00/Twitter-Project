@@ -259,3 +259,26 @@ def test_access_without_token(db):
     client = APIClient()
     response = client.get("/api/users/")
     assert response.status_code == 401
+
+def test_endpoint_me(db):
+    user1 = UserFactory()
+    client = APIClient()
+
+    response = client.post("/api/token/", {
+        'username': user1.username,
+        'password': "senha123"
+    })
+
+    client.credentials(HTTP_AUTHORIZATION="Bearer " + response.data["access"])
+
+    response2 = client.get("/api/users/me/")
+
+    assert response2.status_code == 200
+    assert "name" in response2.data
+
+def test_endpoint_me_without_logged(db):
+    client = APIClient()
+
+    response = client.get("/api/users/me/")
+
+    assert response.status_code == 401
