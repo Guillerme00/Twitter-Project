@@ -139,3 +139,42 @@ def test_like_increases(db):
     assert response2.status_code == 200
     assert response2.data == {"status": "liked"}
     assert post.likes.count() == 2
+
+def test_retweet_a_post(db):
+    user1 = UserFactory()
+    post = PostFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.post(f"/api/posts/{post.pk}/retweet/")
+
+    assert response.status_code == 201
+    assert post.retweets.count() == 1
+
+
+def test_unretweet_a_post(db):
+    user1 = UserFactory()
+    post = PostFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    client.post(f"/api/posts/{post.pk}/retweet/")
+    response = client.post(f"/api/posts/{post.pk}/retweet/")
+
+    assert response.status_code == 200
+    assert post.retweets.count() == 0
+
+def test_return_the_retweeted_post_from_a_user(db):
+    user1 = UserFactory()
+    post = PostFactory()
+    post2 = PostFactory()
+    post3 = PostFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    client.post(f"/api/posts/{post.pk}/retweet/")
+    client.post(f"/api/posts/{post2.pk}/retweet/")
+    client.post(f"/api/posts/{post3.pk}/retweet/")
+
+    print(user1.retweets)
+    assert user1.retweets.count() == 3
