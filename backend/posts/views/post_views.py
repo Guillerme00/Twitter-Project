@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from posts.models import PostModel, CommentPostModel
-from posts.serializers import PostSerializer
+from posts.serializers import PostSerializer, CommentSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -8,7 +8,14 @@ from rest_framework.permissions import IsAuthenticated
 class PostViewSet(viewsets.ModelViewSet):
     queryset = PostModel.objects.all()
     permission_classes = [IsAuthenticated]
-    serializer_class = PostSerializer
+    
+    def get_serializer_class(self):
+        if self.action in ["comment"]:
+            return CommentSerializer
+        return PostSerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     @action(detail=True, methods=["post"])
     def like_unlike_post(self, request, pk=None):
@@ -29,15 +36,10 @@ class PostViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def comment(self, request, pk=None):
         post_to_comment = self.get_object()
-        user_to_comment = request.user
-        user_comment = request.data.get("body")
+        serializer = self.get_serializer(data=request.data)
 
-        comment = CommentPostModel.objects.create(
-            post = post_to_comment,
-            author = user_to_comment,
-            body = user_comment
-        )
-
-        return Response (
-            {"status": "commented"}
-        )
+        if serializer.is_valid():
+            serializer.save(post=post_to_comment, author = request.user)
+            return Response({"status": "commented"})
+        print(serializer.errors)
+        return Response(serializer.errors, status=400)

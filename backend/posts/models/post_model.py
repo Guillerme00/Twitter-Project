@@ -21,6 +21,7 @@ class PostFilesModel(models.Model):
     file = models.FileField(upload_to='posts_media/')
     order = models.PositiveIntegerField(default=0)
 
+
 class CommentPostModel(models.Model):
     post = models.ForeignKey(PostModel, related_name="comments", on_delete=models.CASCADE)
     author = models.ForeignKey(UserModel, related_name="comments", on_delete=models.CASCADE)

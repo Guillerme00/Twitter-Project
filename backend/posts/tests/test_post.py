@@ -11,10 +11,10 @@ def test_dont_allow_a_1200_post(db):
     with pytest.raises(ValidationError):
         post.full_clean()
 
+
 def test_like_post(db):
     user1 = UserFactory()
     post = PostFactory()
-
 
     client = APIClient()
     client.force_authenticate(user=user1)
@@ -22,6 +22,7 @@ def test_like_post(db):
     response = client.post(f"/api/posts/{post.pk}/like_unlike_post/")
     assert response.status_code == 200
     assert response.data["status"] == "liked"
+
 
 def test_unlike_post(db):
     user1 = UserFactory()
@@ -35,6 +36,7 @@ def test_unlike_post(db):
     assert response.status_code == 200
     assert response.data["status"] == "unliked"
 
+
 def test_comment_in_a_post(db):
     user1 = UserFactory()
     post = PostFactory()
@@ -47,13 +49,93 @@ def test_comment_in_a_post(db):
     assert response.status_code == 200
     assert response.data["status"] == "commented"
 
+
 def test_dont_allow_comment_exced_max(db):
     user1 = UserFactory()
-    post = UserFactory()
+    post = PostFactory()
 
     client = APIClient()
     client.force_authenticate(user=user1)
 
-    response = client.post(f"/api/posts/{post.pk}/comment/",{ "body": "0"*501}, format="json")
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "0"*801}, format="json")
 
-    assert response.erros
+    assert response.status_code == 400
+
+
+def test_dont_allow_a_blank_post(db):
+    user1 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+    
+    respose = client.post(f"/api/posts/", {"post_body": ""}, format="json")
+
+    assert respose.status_code == 400
+    assert "post_body" in respose.data
+
+
+def test_dont_allow_a_blank_comment(db):
+    user1 = UserFactory()
+    post = PostFactory()
+
+    client = APIClient()
+    client.force_authenticate(user=user1)
+    
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": ""}, format="json")
+
+    assert response.status_code == 400
+    assert "body" in response.data
+
+def test_create_post(db):
+    user1 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.post(f"/api/posts/", {"post_body": "0"*300}, format="json")
+
+    assert response.status_code == 201
+
+
+def test_delete_post(db):
+    post = PostFactory()
+    user1 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.delete(f"/api/posts/{post.pk}/")
+
+    assert response.status_code == 204
+
+
+def test_get_posts(db):
+    post = PostFactory()
+    post2 = PostFactory()
+    post3 = PostFactory()
+    user1 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.get(f"/api/posts/")
+
+    assert response.status_code == 200
+    assert len(response.data) == 3
+
+def test_like_increases(db):
+    post = PostFactory()
+    user1 = UserFactory()
+    user2 = UserFactory()
+
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    client2 = APIClient()
+    client2.force_authenticate(user=user2)
+
+    response1 = client.post(f"/api/posts/{post.pk}/like_unlike_post/")
+    assert response1.status_code == 200
+    assert response1.data == {"status": "liked"}
+    assert post.likes.count() == 1
+
+    response2 = client2.post(f"/api/posts/{post.pk}/like_unlike_post/")
+    assert response2.status_code == 200
+    assert response2.data == {"status": "liked"}
+    assert post.likes.count() == 2
