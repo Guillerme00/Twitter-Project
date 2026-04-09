@@ -1,7 +1,9 @@
 import pytest
 from django.core.exceptions import ValidationError
+from posts.models import PostModel
 from users.factories.user_factory import UserFactory
 from posts.factories.post_factory import PostFactory
+from posts.models import CommentPostModel
 from rest_framework.test import APIClient
 
 def test_dont_allow_a_1200_post(db):
@@ -96,8 +98,8 @@ def test_create_post(db):
 
 
 def test_delete_post(db):
-    post = PostFactory()
     user1 = UserFactory()
+    post = PostFactory(author=user1)
     client = APIClient()
     client.force_authenticate(user=user1)
 
@@ -239,3 +241,94 @@ def test_retweeted_post_appears_in_following_feed(db):
 
     assert response.status_code == 200
     assert len(response.data) == 1
+
+def test_unauthenticated_user_cannot_create_post(db):
+    client = APIClient()
+    response = client.post("/api/posts/", {"post_body": "hello"})
+    assert response.status_code == 401
+
+def test_user_cannot_delete_another_users_post(db):
+    post = PostFactory()
+    other_user = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=other_user)
+    response = client.delete(f"/api/posts/{post.pk}/")
+    assert response.status_code == 403
+    assert PostModel.objects.filter(pk=post.pk).exists()
+
+def test_user_can_delete_his_own_comment(db):
+    user1 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    post = PostFactory()
+
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "Hello World"}, format="json")
+    response2 = client.delete(f"/api/posts/{post.pk}/delete_comment/{response.data["id"]}/")
+
+    assert response2.data["status"] == "deleted"
+    assert not CommentPostModel.objects.filter(pk=response.data["id"]).exists()
+    
+
+def test_user_cant_delete_anothor_comment(db):
+    user1 = UserFactory()
+    user2 = UserFactory()
+    post = PostFactory()
+    
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    client2 = APIClient()
+    client2.force_authenticate(user=user2)
+
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "hello world"}, format="json")
+    response2 = client2.delete(f"/api/posts/{post.pk}/delete_comment/{response.data["id"]}/")
+
+    assert response2.data["status"] == 404
+
+
+def test_unauthenticated_user_cannot_like_post(db):
+    post = PostFactory()
+    client = APIClient()
+
+    response = client.post(f"/api/posts/{post.pk}/like_unlike_post/")
+
+    assert response.status_code == 401
+
+def test_unauthenticated_user_cannot_comment(db):
+    post = PostFactory()
+    client = APIClient()
+
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "hello world"}, format="json")
+
+    assert response.status_code == 401
+
+def test_unauthenticated_user_cannot_retweet(db):
+    post = PostFactory()
+    client = APIClient()
+
+    response = client.post(f"/api/posts/{post.pk}/retweet/")
+
+    assert response.status_code == 401
+
+def test_unauthenticated_user_cannot_access_feed(db):
+    client = APIClient()
+
+    response = client.get("/api/feed/?feed=following")
+    response2 = client.get("/api/feed/?feed=for_you")
+
+    assert response.status_code == 401
+    assert response2.status_code == 401
+
+def test_user_cannot_delete_comment_unauthenticated(db):
+    user1 = UserFactory()
+    post = PostFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "hello world"}, format="json")
+
+    client2 = APIClient()
+
+    response2 = client2.delete(f"/api/posts/{post.pk}/delete_comment/{response.data["id"]}/")
+    assert response2.status_code == 401

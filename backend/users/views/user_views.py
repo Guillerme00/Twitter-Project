@@ -10,6 +10,25 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = UserModel.objects.all()
     permission_classes = [IsAuthenticated]
 
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+
+        if user == request.user:
+            return super().destroy(request,*args, **kwargs)
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    
+    def partial_update(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user == request.user:
+            return super().partial_update(request, *args, **kwargs)
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
     def get_serializer_class(self):
         if self.action in ["update", "partial_update"]:
             return UserUpdateSerializer
