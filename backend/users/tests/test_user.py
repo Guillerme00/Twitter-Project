@@ -213,7 +213,7 @@ def test_refresh_token(db):
     })
 
     response2 = client.post("/api/token/refresh/", {
-        "refresh": f"{response.data["refresh"]}"
+        "refresh": f"{response.data['refresh']}"
     })
 
     assert response2.status_code == 200
@@ -246,7 +246,7 @@ def test_refresh_token_works(db):
     })
 
     response2 = client.post("/api/token/refresh/", {
-        'refresh': f"{response.data["refresh"]}"
+        'refresh': f"{response.data['refresh']}"
     })
     
     client.credentials(HTTP_AUTHORIZATION="Bearer " + response2.data["access"])
