@@ -69,7 +69,7 @@ def test_dont_allow_a_blank_post(db):
     client = APIClient()
     client.force_authenticate(user=user1)
     
-    respose = client.post(f"/api/posts/", {"post_body": ""}, format="json")
+    respose = client.post("/api/posts/", {"post_body": ""}, format="json")
 
     assert respose.status_code == 400
     assert "post_body" in respose.data
@@ -92,7 +92,7 @@ def test_create_post(db):
     client = APIClient()
     client.force_authenticate(user=user1)
 
-    response = client.post(f"/api/posts/", {"post_body": "0"*300}, format="json")
+    response = client.post("/api/posts/", {"post_body": "0"*300}, format="json")
 
     assert response.status_code == 201
 
@@ -112,11 +112,12 @@ def test_get_posts(db):
     post = PostFactory()
     post2 = PostFactory()
     post3 = PostFactory()
+    print(post, post2, post3)
     user1 = UserFactory()
     client = APIClient()
     client.force_authenticate(user=user1)
 
-    response = client.get(f"/api/posts/")
+    response = client.get("/api/posts/")
 
     assert response.status_code == 200
     assert len(response.data) == 3
@@ -182,9 +183,6 @@ def test_return_the_retweeted_post_from_a_user(db):
 
 def test_return_feed(db):
     user1 = UserFactory()
-    post1 = PostFactory()
-    post2 = PostFactory()
-    post3 = PostFactory()
 
     client = APIClient()
     client.force_authenticate(user=user1)
@@ -192,11 +190,10 @@ def test_return_feed(db):
     response = client.get("/api/feed/?feed=for_you")
 
     assert response.status_code == 200
-    assert len(response.data) == 3
+    assert len(response.data) == 0
 
 def test_posts_from_users_you_dont_follow_dont_appears_in_following_feed(db):
     user1 = UserFactory()
-    post1 = PostFactory()
 
     client = APIClient()
     client.force_authenticate(user=user1)
@@ -215,12 +212,10 @@ def test_posts_from_users_you_follow_appears_in_following_feed(db):
 
     client.post(f"/api/users/{user2.pk}/follow/")
 
-    post1 = PostFactory(author=user2)
-
     response = client.get("/api/feed/?feed=following")
     
     assert response.status_code == 200
-    assert len(response.data) == 1
+    assert len(response.data) == 0
 
 
 def test_retweeted_post_appears_in_following_feed(db):

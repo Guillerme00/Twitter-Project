@@ -3,9 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from posts.models import PostModel, RetweetModel
-from users.models import UserModel
 from posts.serializers import FeedSerializer
-from rest_framework import status
 from django.db.models import Q
 
 class FeedView(APIView):

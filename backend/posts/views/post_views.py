@@ -5,7 +5,6 @@ from posts.serializers import PostSerializer, CommentSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = PostModel.objects.all()

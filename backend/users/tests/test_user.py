@@ -85,8 +85,8 @@ def test_follow_again_return_false(db):
     user1 = UserFactory()
     user2 = UserFactory()
 
-    assert user1.follow(user2) == True
-    assert user1.follow(user2) == False
+    assert user1.follow(user2)
+    assert not user1.follow(user2)
 
 def test_api_get_requisition(db):
     client = APIClient()
