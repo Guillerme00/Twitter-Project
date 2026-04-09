@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-50d-19uxc66_itax9b8ag$#-6^2rkkwl+u77qs@$-0r*e^o42x"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "F1i9pyy3p3lahOISf9GcUlG_hMHri14O8Sdio6JSPhe5GTstR6w-Ht40_pMtsK4t7pc")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -39,7 +40,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "users",
-    "rest_framework"
+    "rest_framework",
+    "posts",
 ]
 
 MIDDLEWARE = [

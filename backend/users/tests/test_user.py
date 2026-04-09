@@ -85,8 +85,8 @@ def test_follow_again_return_false(db):
     user1 = UserFactory()
     user2 = UserFactory()
 
-    assert user1.follow(user2) == True
-    assert user1.follow(user2) == False
+    assert user1.follow(user2)
+    assert not user1.follow(user2)
 
 def test_api_get_requisition(db):
     client = APIClient()
@@ -152,10 +152,11 @@ def test_user1_cant_unfollow_yourself(db):
 
 def test_user1_cant_follow_twice(db):
     user1 = UserFactory()
+    user2 = UserFactory()
     client = APIClient()
     client.force_authenticate(user=user1)
-    client.post(f"/api/users/{user1.pk}/follow/", format="json")
-    response = client.post(f"/api/users/{user1.pk}/follow/", format="json")
+    client.post(f"/api/users/{user2.pk}/follow/", format="json")
+    response = client.post(f"/api/users/{user2.pk}/follow/", format="json")
     assert response.status_code == 400
 
 def test_get_single_user(db):
@@ -212,7 +213,7 @@ def test_refresh_token(db):
     })
 
     response2 = client.post("/api/token/refresh/", {
-        "refresh": f"{response.data["refresh"]}"
+        "refresh": f"{response.data['refresh']}"
     })
 
     assert response2.status_code == 200
@@ -245,7 +246,7 @@ def test_refresh_token_works(db):
     })
 
     response2 = client.post("/api/token/refresh/", {
-        'refresh': f"{response.data["refresh"]}"
+        'refresh': f"{response.data['refresh']}"
     })
     
     client.credentials(HTTP_AUTHORIZATION="Bearer " + response2.data["access"])
@@ -282,3 +283,35 @@ def test_endpoint_me_without_logged(db):
     response = client.get("/api/users/me/")
 
     assert response.status_code == 401
+
+def test_unauthenticated_user_cannot_follow(db):
+    user1 = UserFactory()
+    client = APIClient()
+    response = client.post(f"/api/users/{user1.pk}/follow/")
+    assert response.status_code == 401
+
+def test_unauthenticated_user_cannot_delete_user(db):
+    user1 = UserFactory()
+    client = APIClient()
+    response = client.delete(f"/api/users/{user1.pk}/")
+    assert response.status_code == 401
+
+def test_user_cannot_delete_another_user(db):
+    user1 = UserFactory()
+    user2 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.delete(f"/api/users/{user2.pk}/")
+
+    assert response.status_code == 403
+
+def test_user_cannot_edit_another_user(db):
+    user1 = UserFactory()
+    user2 = UserFactory()
+    client = APIClient()
+    client.force_authenticate(user=user1)
+
+    response = client.patch(f"/api/users/{user2.pk}/", {"name": "hacker"}, format="json")
+
+    assert response.status_code == 403
