@@ -259,10 +259,10 @@ def test_user_can_delete_his_own_comment(db):
     post = PostFactory()
 
     response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "Hello World"}, format="json")
-    response2 = client.delete(f"/api/posts/{post.pk}/delete_comment/{response.data["id"]}/")
+    response2 = client.delete(f"/api/posts/{post.pk}/delete_comment/{response.data['id']}/")
 
     assert response2.data["status"] == "deleted"
-    assert not CommentPostModel.objects.filter(pk=response.data["id"]).exists()
+    assert not CommentPostModel.objects.filter(pk=response.data['id']).exists()
     
 
 def test_user_cant_delete_anothor_comment(db):
@@ -277,7 +277,7 @@ def test_user_cant_delete_anothor_comment(db):
     client2.force_authenticate(user=user2)
 
     response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "hello world"}, format="json")
-    response2 = client2.delete(f"/api/posts/{post.pk}/delete_comment/{response.data["id"]}/")
+    response2 = client2.delete(f"/api/posts/{post.pk}/delete_comment/{response.data['id']}/")
 
     assert response2.data["status"] == 404
 
@@ -325,5 +325,5 @@ def test_user_cannot_delete_comment_unauthenticated(db):
 
     client2 = APIClient()
 
-    response2 = client2.delete(f"/api/posts/{post.pk}/delete_comment/{response.data["id"]}/")
+    response2 = client2.delete(f"/api/posts/{post.pk}/delete_comment/{response.data['id']}/")
     assert response2.status_code == 401
