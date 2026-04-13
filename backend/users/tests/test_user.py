@@ -233,7 +233,7 @@ def test_acess_token_works(db):
     response2 = client.get("/api/users/")
 
     assert response2.status_code == 200
-    assert user1.name == response2.data[0]["name"]
+    assert user1.name == response2.data["results"][0]["name"]
 
 
 def test_refresh_token_works(db):
@@ -254,7 +254,7 @@ def test_refresh_token_works(db):
     response3 = client.get("/api/users/")
 
     assert response3.status_code == 200
-    assert user1.name == response3.data[0]["name"]
+    assert user1.name == response3.data["results"][0]["name"]
 
 def test_access_without_token(db):
     client = APIClient()

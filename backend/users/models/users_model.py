@@ -3,6 +3,9 @@ from django.contrib.auth.models import AbstractUser
 
 class UserModel(AbstractUser):
     
+    class Meta:
+        ordering = ["-id"]
+
     name = models.CharField(
         max_length=120,
         blank=False,

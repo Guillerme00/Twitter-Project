@@ -2,7 +2,6 @@ import CommentIcon from "../assets/icons/comment-alt.svg?react";
 import LikeIcon from "../assets/icons/heart.svg?react";
 import RetweetIcon from "../assets/icons/retweet.svg?react";
 
-/*The props are still missing.*/
 type PostProps = {
   name: string;
   username: string;

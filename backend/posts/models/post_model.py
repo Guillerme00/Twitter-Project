@@ -2,6 +2,10 @@ from django.db import models
 from users.models import UserModel
 
 class PostModel(models.Model):
+
+    class Meta:
+        ordering = ["-created_at"]
+
     created_at = models.DateField(auto_now_add=True)
     author = models.ForeignKey(UserModel, related_name="posts", on_delete=models.CASCADE)
     post_body = models.CharField(
