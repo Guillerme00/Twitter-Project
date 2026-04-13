@@ -21,7 +21,12 @@ export function Feed() {
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                const response = await axios.get("http://127.0.0.1:8000/api/posts/");
+                const response = await axios.get("http://127.0.0.1:8000/api/posts/", {
+                    headers: {
+                        Authorization: `Bearer` //insert token here
+                    }
+                });
+                console.log(response.data.results)
                 UsePosts(response.data.results)
             } catch (error) {
                 console.log(error)

@@ -1,9 +1,10 @@
-import {Feed} from "./pages/feed"
+
+import { RegisterPage } from "./pages/register_page"
 function App() {
 
   return (
     <>
-      <Feed />
+      <RegisterPage />
     </>
   )
 }

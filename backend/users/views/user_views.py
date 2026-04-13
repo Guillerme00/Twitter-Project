@@ -4,11 +4,18 @@ from users.serializers import UserSerializer, UserUpdateSerializer
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = UserModel.objects.all()
-    permission_classes = [IsAuthenticated]
+    
+    def get_permissions(self):
+        if self.action == "create":
+            return [AllowAny()]
+        return[IsAuthenticated()]
+
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         user = self.get_object()
