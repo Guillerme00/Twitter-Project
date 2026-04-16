@@ -42,6 +42,7 @@ export function Register() {
   const [usernameValid, setUsernameValid] = useState("untouched")
   const [emailValid, setEmailValid] = useState("untouched")
   const [pass2Valid, setPass2Valid] = useState("untouched")
+  const [passValid, setPassValid] = useState("untouched")
 
   const [passwordtest1, setPasswordtest1] = useState(false)
   const [passwordtest2, setPasswordtest2] = useState(false)
@@ -120,8 +121,10 @@ export function Register() {
 
     if (number && lower && upper && special && quantity) {
       setPasswordVerified(true)
+      setPassValid("valid")
       return
     }
+    setPassValid("invalid")
     setPasswordVerified(false)
   }
 
@@ -218,11 +221,11 @@ export function Register() {
             autoComplete="new-password"
             className="text-white placeholder-stone-700 p-4 mt-4 text-[20px] mb-1 border-stone-700 border-2 rounded-xs w-full"
           />
-          <h2 className={`${passwordtest1? "text-green-500" : "text-red-500"} mb-4`}>Password must have at least a number</h2>
-          <h2 className={`${passwordtest2? "text-green-500" : "text-red-500"} mb-4`}>Password must have at least a lower letter</h2>
-          <h2 className={`${passwordtest3? "text-green-500" : "text-red-500"} mb-4`}>Password must have at least a upper letter</h2>
-          <h2 className={`${passwordtest4? "text-green-500" : "text-red-500"} mb-4`}>Password must have at least a special character</h2>
-          <h2 className={`${passwordtest5? "text-green-500" : "text-red-500"} mb-4`}>Password must have between 8 and 20 characters</h2>
+          {passValid === "invalid" && <h2 className={`${passwordtest1? "text-green-500" : "text-red-500"} mb-4`}>Password must have at least a number</h2>}
+          {passValid === "invalid" && <h2 className={`${passwordtest2? "text-green-500" : "text-red-500"} mb-4`}>Password must have at least a lower letter</h2>}
+          {passValid === "invalid" && <h2 className={`${passwordtest3? "text-green-500" : "text-red-500"} mb-4`}>Password must have at least a upper letter</h2>}
+          {passValid === "invalid" && <h2 className={`${passwordtest4? "text-green-500" : "text-red-500"} mb-4`}>Password must have at least a special character</h2>}
+          {passValid === "invalid" && <h2 className={`${passwordtest5? "text-green-500" : "text-red-500"} mb-4`}>Password must have between 8 and 20 characters</h2>}
           
           
           <input
@@ -243,7 +246,7 @@ export function Register() {
             <select
               value={day}
               onChange={(e) => setDay(e.target.value)}
-              className="flex-1 p-4 text-white placeholder-stone-700 p-4 text-[20px] mb-4 border-stone-700 border-2 rounded-xs"
+              className="flex-1 p-4 bg-black text-white placeholder-stone-700 p-4 text-[20px] mb-4 border-stone-700 border-2 rounded-xs"
             >
               <option value="" disabled>
                 Day
@@ -257,7 +260,7 @@ export function Register() {
             <select
               onChange={(e) => setMonth(e.target.value)}
               value={month}
-              className="flex-1 p-4 text-white placeholder-stone-700 p-4 text-[20px] mb-4 border-stone-700 border-2 rounded-xs"
+              className="flex-1 p-4 bg-black text-white placeholder-stone-700 p-4 text-[20px] mb-4 border-stone-700 border-2 rounded-xs"
             >
               <option value="" disabled>
                 Month
@@ -271,12 +274,12 @@ export function Register() {
             <select
               onChange={(e) => setYear(e.target.value)}
               value={year}
-              className="flex-1 p-4 text-white placeholder-stone-700 p-4 text-[20px] mb-4 border-stone-700 border-2 rounded-xs"
+              className="flex-1 p-4 bg-black text-white placeholder-stone-700 p-4 text-[20px] mb-4 border-stone-700 border-2 rounded-xs"
             >
               <option value="" disabled>
                 Year
               </option>
-              {Array.from({ length: 2026 - 1940 + 1 }, (_, i) => 2026 - i).map(
+              {Array.from({ length: 2026 - 1900 + 1 }, (_, i) => 2026 - i).map(
                 (year) => (
                   <option key={year} value={year}>
                     {year}
