@@ -45,7 +45,8 @@ def test_serializer_username_validation(db):
         'name': "guilherme",
         'username': "guilherme00",
         'birthday': '2000-01-01',
-        'password': 'password12345'
+        'password': 'password12345',
+        "email": "example@gmail.com"
     }
 
     serializer = UserSerializer(data=data)
@@ -107,7 +108,8 @@ def test_api_post_requisition(db):
         'username': user.username,
         'name': user.name,
         'password': user.password,
-        'birthday': user.birthday
+        'birthday': user.birthday,
+        "email": user.email
     }
 
     response = client.post("/api/users/", data, format="json")
@@ -233,7 +235,7 @@ def test_acess_token_works(db):
     response2 = client.get("/api/users/")
 
     assert response2.status_code == 200
-    assert user1.name == response2.data[0]["name"]
+    assert user1.name == response2.data["results"][0]["name"]
 
 
 def test_refresh_token_works(db):
@@ -254,7 +256,7 @@ def test_refresh_token_works(db):
     response3 = client.get("/api/users/")
 
     assert response3.status_code == 200
-    assert user1.name == response3.data[0]["name"]
+    assert user1.name == response3.data["results"][0]["name"]
 
 def test_access_without_token(db):
     client = APIClient()
@@ -315,3 +317,16 @@ def test_user_cannot_edit_another_user(db):
     response = client.patch(f"/api/users/{user2.pk}/", {"name": "hacker"}, format="json")
 
     assert response.status_code == 403
+
+def test_dont_create_a_user_without_email(db):
+    client = APIClient()
+    data = {
+        'username': "guillerme",
+        'name': "gui",
+        'password': "passwordsupersafe",
+        'birthday': "2000-1-1"
+    }
+
+    response = client.post("/api/users/", data, format="json")
+    
+    assert response.status_code == 400

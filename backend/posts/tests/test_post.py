@@ -120,7 +120,7 @@ def test_get_posts(db):
     response = client.get("/api/posts/")
 
     assert response.status_code == 200
-    assert len(response.data) == 3
+    assert response.data["count"] == 3
 
 def test_like_increases(db):
     post = PostFactory()

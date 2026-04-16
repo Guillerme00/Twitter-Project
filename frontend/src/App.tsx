@@ -1,8 +1,10 @@
+
+import { RegisterPage } from "./pages/register_page"
 function App() {
 
   return (
     <>
-      <h1>Hello World</h1>
+      <RegisterPage />
     </>
   )
 }

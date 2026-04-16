@@ -3,12 +3,19 @@ from django.contrib.auth.models import AbstractUser
 
 class UserModel(AbstractUser):
     
+    class Meta:
+        ordering = ["-id"]
+
     name = models.CharField(
         max_length=120,
         blank=False,
         null=False,
         )
     
+    email = models.EmailField(
+        blank=False,
+        null=False
+    )
 
     profile_image = models.ImageField(
         blank=True,
