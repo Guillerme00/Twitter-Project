@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from users.models import UserModel
+from rest_framework.exceptions import ValidationError
 
 class UserSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
@@ -19,6 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
+        email = validated_data.pop('email', None)
+
+        if not email:
+            raise ValidationError({"email": "this field is required"})
+
         password = validated_data.pop('password', None)
         user = UserModel(**validated_data)
         if password:
@@ -29,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
     # Classes
     class Meta:
         model = UserModel
-        fields = ["name", "username", "profile_image", "profile_banner", "bio", "followers_count", "following_count", "password", "birthday"]
+        fields = ["name", "email", "username", "profile_image", "profile_banner", "bio", "followers_count", "following_count", "password", "birthday"]
         read_only_fields = ['created_at', 'id']
         extra_kwargs = {
             'password': {"write_only": True, "required":True}

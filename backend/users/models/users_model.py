@@ -12,6 +12,10 @@ class UserModel(AbstractUser):
         null=False,
         )
     
+    email = models.EmailField(
+        blank=False,
+        null=False
+    )
 
     profile_image = models.ImageField(
         blank=True,
