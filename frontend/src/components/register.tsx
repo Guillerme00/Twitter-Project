@@ -159,7 +159,7 @@ export function Register() {
   return (
     <div className="flex flex-col items-center pt-[64px]">
       <XIcon className="fill-white" />
-      <div className="w-full max-w-[550px]">
+      <div className="w-full max-w-[550px] flex flex-col items-center">
         <form className="flex flex-col items-center w-full mt-4">
           <input
             value={name}
@@ -295,6 +295,12 @@ export function Register() {
         >
           Continue
         </button>
+        <p className="text-stone-500 mt-4">
+        Already have an account?{" "}
+        <a href="/login" className="text-blue-500 hover:underline">
+          Log in
+          </a>
+        </p>
       </div>
     </div>
   );
