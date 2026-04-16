@@ -1,10 +1,10 @@
 
-import { RegisterPage } from "./pages/register_page"
+import { LoginPage } from "./pages/login_page"
 function App() {
 
   return (
     <>
-      <RegisterPage />
+      <LoginPage />
     </>
   )
 }
