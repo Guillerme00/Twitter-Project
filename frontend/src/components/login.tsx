@@ -5,22 +5,27 @@ import axios from "axios";
 export function Login() {
   //types
   type loginData = {
-    email: string;
+    username: string;
     password: string;
   };
 
+  type TokenResponse = {
+  access: string;
+  refresh: string;
+};
+
 
   //states
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [pass1, setPass1] = useState("");
 
   //functions
-  const post_login = async (UserData: loginData): Promise<number> => {
-    const response = await axios.post(
+  const post_login = async (UserData: loginData): Promise<TokenResponse> => {
+    const response = await axios.post<TokenResponse>(
       "http://localhost:8000/api/token/",
       UserData,
     );
-    return response.status;
+    return response.data;
   };
 
   const set_pass1 = (password: string): void => {
@@ -29,10 +34,11 @@ export function Login() {
 
   const handleSubmit = async () => {
     const user = {
-      "email": email,
+      "username": username,
       "password": pass1
     }
     const response = post_login(user)
+    console.log(response)
     return response
   };
 
@@ -44,14 +50,14 @@ export function Login() {
         <form className="flex flex-col items-center w-full mt-4">
           
           <input
-            value={email}
+            value={username}
             onChange={(e) => {
-              setEmail(e.target.value)
+              setUsername(e.target.value)
             }}
             required
-            type="email"
-            name="email"
-            placeholder="E-mail"
+            type="text"
+            name="username"
+            placeholder="Username"
             className="text-white placeholder-stone-700 p-4 mt-4 text-[20px] mb-1 border-stone-700 border-2 rounded-xs w-full"
           />  
           
