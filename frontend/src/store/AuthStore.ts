@@ -1,10 +1,15 @@
 import { create } from "zustand";
 
+type User = {
+  id: number,
+  username: string,
+}
+
 type AuthState = {
-  user: string | null;
+  user: User | null;
   accessToken: string | null;
 
-  login: (user: string, token: string) => void;
+  login: (user: User, token: string) => void;
   logout: () => void;
 };
 

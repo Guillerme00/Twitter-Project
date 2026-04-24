@@ -1,6 +1,7 @@
 import { useState } from "react";
 import XIcon from "../assets/icons/x_logo.svg?react";
-import axios from "axios";
+import axios, { type AxiosResponse } from "axios";
+import { useAuthStore } from "../store/AuthStore";
 
 export function Login() {
   //types
@@ -20,12 +21,15 @@ export function Login() {
   const [pass1, setPass1] = useState("");
 
   //functions
-  const post_login = async (UserData: loginData): Promise<TokenResponse> => {
+  const login = useAuthStore((state) => state.login)
+
+
+  const post_login = async (UserData: loginData): Promise<AxiosResponse<TokenResponse>> => {
     const response = await axios.post<TokenResponse>(
       "http://localhost:8000/api/token/",
       UserData,
     );
-    return response.data;
+    return response;
   };
 
   const set_pass1 = (password: string): void => {
@@ -37,9 +41,16 @@ export function Login() {
       "username": username,
       "password": pass1
     }
-    const response = post_login(user)
-    console.log(response)
-    return response
+    const response = await post_login(user)
+    const userInfos = await axios.get("http://localhost:8000/api/users/me/")
+
+    login(
+      {
+        id: 1,
+        username: username,
+      },
+      response.data.access
+    )
   };
 
   //body
