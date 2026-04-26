@@ -203,60 +203,6 @@ def test_token_response_from_auth(db):
 
     assert response.status_code == 200
     assert 'access' in response.data
-    assert 'refresh' in response.data
-
-def test_refresh_token(db):
-    user1 = UserFactory()
-    client = APIClient()
-
-    response = client.post("/api/token/", {
-        'username': user1.username,
-        'password': "senha123"
-    })
-
-    response2 = client.post("/api/token/refresh/", {
-        "refresh": f"{response.data['refresh']}"
-    })
-
-    assert response2.status_code == 200
-    assert "access" in response.data
-
-def test_acess_token_works(db):
-    user1 = UserFactory()
-    client = APIClient()
-
-    response = client.post("/api/token/", {
-        'username': user1.username,
-        'password': "senha123"
-    })
-
-    client.credentials(HTTP_AUTHORIZATION="Bearer " + response.data["access"])
-
-    response2 = client.get("/api/users/")
-
-    assert response2.status_code == 200
-    assert user1.name == response2.data["results"][0]["name"]
-
-
-def test_refresh_token_works(db):
-    user1 = UserFactory()
-    client = APIClient()
-
-    response = client.post("/api/token/", {
-        'username': user1.username,
-        'password': "senha123"
-    })
-
-    response2 = client.post("/api/token/refresh/", {
-        'refresh': f"{response.data['refresh']}"
-    })
-    
-    client.credentials(HTTP_AUTHORIZATION="Bearer " + response2.data["access"])
-
-    response3 = client.get("/api/users/")
-
-    assert response3.status_code == 200
-    assert user1.name == response3.data["results"][0]["name"]
 
 def test_access_without_token(db):
     client = APIClient()

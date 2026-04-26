@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = UserModel.objects.all()
@@ -13,9 +14,12 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return [AllowAny()]
         return[IsAuthenticated()]
+    
 
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
+
+        
 
     def destroy(self, request, *args, **kwargs):
         user = self.get_object()
@@ -24,17 +28,23 @@ class UserViewSet(viewsets.ModelViewSet):
             return super().destroy(request,*args, **kwargs)
         return Response(status=status.HTTP_403_FORBIDDEN)
     
+
+    
     def partial_update(self, request, *args, **kwargs):
         user = self.get_object()
         if user == request.user:
             return super().partial_update(request, *args, **kwargs)
         return Response(status=status.HTTP_403_FORBIDDEN)
     
+
+    
     def update(self, request, *args, **kwargs):
         user = self.get_object()
         if user != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
         return super().update(request, *args, **kwargs)
+    
+    
 
     def get_serializer_class(self):
         if self.action in ["update", "partial_update"]:
@@ -87,3 +97,21 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.data,
             status=status.HTTP_200_OK
         )
+    
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+
+        if response.status_code == 200:
+            refresh = response.data.get("refresh")
+
+            response.data.pop("refresh", None)
+
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh,
+                httponly=True,
+                secure=False,
+                samesite="Lax"
+            )
+        return response

@@ -1,5 +1,9 @@
+import { Login } from "../components/login"
+
 export function LoginPage() {
     return (
-        <h1>Hello World</h1>
+        <div className="bg-black min-h-screen">
+            <Login></Login>
+        </div>
     )
 }
