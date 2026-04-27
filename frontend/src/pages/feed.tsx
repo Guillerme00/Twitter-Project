@@ -17,41 +17,50 @@ type PostProps = {
 };
 
 export function Feed() {
-  const [Posts, UsePosts] = useState<PostProps[]>([]);
-  const token = useAuthStore((state) => state.accessToken);
+  //states
+  // const [Posts, UsePosts] = useState<PostProps[]>([]);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/api/posts/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log(response.data.results);
-        UsePosts(response.data.results);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchPosts();
-  }, []);
+  //consts
+  // const token = useAuthStore((state) => state.accessToken);
+
+
+  // UseEffects
+  // useEffect(() => {
+  //   const fetchPosts = async () => {
+  //     try {
+  //       const response = await axios.get("http://127.0.0.1:8000/api/posts/", {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
+  //        console.log(response.data.results);
+  //       UsePosts(response.data.results);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+  //   fetchPosts();
+  // }, []);
+
+
+
+  // Body
   return (
-    <div>
-      {Posts.map((post) => (
+    <div className="bg-black min-h-screen flex justify-center">
+      <div className="text-white border-r-[0.5px] border-stone-500">n1n1n1n1n1n1n1n1</div>
         <Post
-          key={post.id}
-          name={post.name}
-          username={post.username}
-          profileImage={post.profileImage}
-          comments={post.comments}
-          likes={post.likes}
-          retweets={post.retweets}
-          content={post.content}
-          postImage={post.postImage}
-          created_at={post.created_at}
+          key={1}
+          name="Guilherme Toledo"
+          username="guillerme007"
+          profileImage="https://placehold.co/64x64"
+          comments={0}
+          likes={0}
+          retweets={0}
+          content="Hello World"
+          postImage="https://placehold.co/1000x600"
+          created_at="01-01-2026"
         />
-      ))}
+      <div className="text-white border-l-[0.5px] border-stone-500">n33nn3n3nn3n3nn3n3n</div>
     </div>
   );
 }
