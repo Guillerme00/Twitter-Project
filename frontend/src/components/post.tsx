@@ -33,7 +33,7 @@ function CalcTemp(created_at: string) {
 
 export function Post(props: PostProps) {
   return (
-    <div className="bg-black flex p-4 w-1/2">
+    <div className="bg-black flex p-4">
       <img
         className="rounded-full w-[64px] h-[64px] cursor-pointer self-start"
         src={props.profileImage}
