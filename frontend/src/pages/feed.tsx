@@ -20,54 +20,29 @@ type PostProps = {
   retweets: number;
   created_at: string;
 };
+const api = axios.create({
+  baseURL: "http://localhost:8000/api",
+  withCredentials: true,
+});
 
-export function Feed() {
-  //states
-  const [postMessage, setPostMessage] = useState("");
-  const [Posts, UsePosts] = useState<PostProps[]>([]);
 
-  //consts
-  const token = useAuthStore((state) => state.accessToken);
-  const validPost = postMessage.length >= 1 && postMessage.length <= 500;
-
-  // UseEffects
-  useEffect(() => {
-    const fetchPosts = async () => {
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/posts/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log(response.data.results);
-        UsePosts(response.data.results);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchPosts();
-  }, [token]);
-
-  const api = axios.create({
-    baseURL: "http://localhost:8000/api/posts",
-    withCredentials: true,
-  });
-  api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      const originalRequest = error.config;
-
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
-
-        try {
+          const { setAccessToken } = useAuthStore.getState();
           const res = await axios.post(
-            "http://localhost:8000/token/refresh",
+            "http://localhost:8000/api/token/refresh/",
             {},
             { withCredentials: true },
           );
 
-          localStorage.setItem("access", res.data.access);
+          setAccessToken(res.data.access);
 
           originalRequest.headers["Authorization"] =
             `Bearer ${res.data.access}`;
@@ -81,6 +56,87 @@ export function Feed() {
       return Promise.reject(error);
     },
   );
+
+export function Feed() {
+  //consts
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
+
+
+  //states
+  const [postMessage, setPostMessage] = useState("");
+  const [Posts, UsePosts] = useState<PostProps[]>([]);
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  //functions
+  const validPost = postMessage.length >= 1 && postMessage.length <= 500;
+
+  // UseEffects
+  useEffect(() => {
+    if (accessToken) return
+    const handleInit = async() => {
+        try {
+            const res = await axios.post(
+              "http://localhost:8000/api/token/refresh/",
+              {},
+              { withCredentials: true },
+            );
+            setAccessToken(res.data.access);
+
+        } catch (err) {
+          console.log(err) //after implement redirect do login
+      }
+    }
+    handleInit()
+  }, [])
+
+
+  useEffect(() => {
+    if (!accessToken) return
+    
+    const fetchPosts = async () => {
+      try {
+        const response = await api.get("/posts", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        console.log(response.data.results);
+        UsePosts(response.data.results);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchPosts();
+  }, [accessToken]);
+
+  //functions
+
+  const handlePost = async () => {
+    const formData = new FormData()
+    if (image) {
+      formData.append("post_body", postMessage);
+      formData.append("file", image);
+    } else {
+      formData.append("post_body", postMessage)
+    }
+    try {
+      const response = await api.post(
+        "/posts",
+        formData,
+        {headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }},
+      )
+      setImage(null)
+      setPreview(null)
+      setPostMessage("")
+      console.log(response)
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
   // Body
   return (
@@ -106,7 +162,7 @@ export function Feed() {
         </div>
 
         {/* mid side */}
-        <div className="border-r border-stone-800">
+        <div className="border-r border-stone-800 flex-1 max-w-[600px]">
           <div className="grid grid-cols-2 border-b border-stone-800">
             <div className="p-4 cursor-pointer font-bold text-center hover:bg-stone-900">
               <div className="inline-block">
@@ -120,21 +176,47 @@ export function Feed() {
           </div>
 
           <div className="flex flex-col p-4 border-b border-stone-800">
-            <div className="flex">
-              <img
+            <div className="flex flex-col">
+              <div className="flex">
+                <img
                 src="https://placehold.co/48x48"
                 alt="profile_picture"
                 className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
               />
               <textarea
                 placeholder="What's happening?"
-                className="bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none border-b border-stone-800"
+                className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none border-b border-stone-800"
                 onChange={(s) => {
                   setPostMessage(s.target.value);
                   s.target.style.height = "auto";
                   s.target.style.height = s.target.scrollHeight + "px";
                 }}
+                onPaste={(e) => {
+                  const items = e.clipboardData.items;
+
+                  for (let i = 0; i < items.length; i++) {
+                    const item = items[i]
+
+                    if (item.type.startsWith("image")) {
+                      const file = item.getAsFile();
+
+                      if (file) {
+                        setImage(file)
+
+                        const url = URL.createObjectURL(file)
+                        setPreview(url)
+                      }
+                    }
+                  }
+                }}
               />
+              </div>
+              {preview && (
+                <>
+                  <img src={preview} alt="preview" className="mt-2 rounded-xl max-h-80 object-cover" />
+                  <div className="border-b border-stone-800 pb-4" />
+                </>
+              )}
             </div>
             <div className="flex justify-end mt-2">
               <button
@@ -145,6 +227,7 @@ export function Feed() {
                     : "bg-stone-700 text-black opacity-50 cursor-not-allowed"
                 }
               `}
+              onClick={handlePost}
               >
                 Post
               </button>

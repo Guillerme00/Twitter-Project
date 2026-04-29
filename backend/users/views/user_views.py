@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = UserModel.objects.all()
@@ -104,24 +105,26 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
         if response.status_code == 200:
             refresh = response.data.get("refresh")
-
             response.data.pop("refresh", None)
 
             response.set_cookie(
                 key="refresh_token",
                 value=refresh,
                 httponly=True,
-                secure=True,
-                samesite="Strict",
+                secure=False,
+                samesite="Lax",
             )
         return response
 
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh = request.COOKIES.get("refresh_token")
+        print("COOKIE:", request.COOKIES)
+        print("REFRESH:", refresh)
+        if not refresh:
+            return Response({"error": "No refresh token"}, status=400)
+        data = {"refresh": refresh}
+        serializer = TokenRefreshSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
 
-        if refresh:
-            request.data["refresh"] = refresh
-
-
-        return super().post(request, *args, **kwargs)
+        return Response(serializer.validated_data)

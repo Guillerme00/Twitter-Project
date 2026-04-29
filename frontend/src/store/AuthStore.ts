@@ -11,6 +11,7 @@ type AuthState = {
 
   login: (user: User, token: string) => void;
   logout: () => void;
+  setAccessToken: (token: string) => void;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -28,4 +29,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       user: null,
       accessToken: null,
     }),
+
+  setAccessToken: (token: string | null) => set({ accessToken: token})
 }));
