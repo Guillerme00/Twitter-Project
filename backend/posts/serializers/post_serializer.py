@@ -1,8 +1,10 @@
 from rest_framework import serializers
 from posts.models import PostModel
+from users.serializers import UserSerializer
 
 class PostSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
+    author = UserSerializer(read_only=True)
 
     def get_likes_count(self, obj):
         return obj.likes.count()

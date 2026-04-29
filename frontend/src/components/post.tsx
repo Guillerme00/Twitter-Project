@@ -33,7 +33,7 @@ function CalcTemp(created_at: string) {
 
 export function Post(props: PostProps) {
   return (
-    <div className="bg-black flex p-4 mr-2">
+    <div className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%]">
       <img
         className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
         src={props.profileImage}
@@ -60,21 +60,21 @@ export function Post(props: PostProps) {
           />
         )}
 
-        <div className="flex justify-center gap-32">
+        <div className="flex justify-center gap-32 mt-4">
           <div className="flex items-center group cursor-pointer">
-            <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-8 h-8 transition-colors duration-300" />
+            <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
             <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
               {props.comments}
             </h2>
           </div>
           <div className="flex items-center group cursor-pointer">
-            <RetweetIcon className="fill-stone-500 group-hover:fill-green-400 w-8 h-8 transition-colors duration-300" />
+            <RetweetIcon className="fill-stone-500 group-hover:fill-green-400 w-6 h-6 transition-colors duration-300" />
             <h2 className="text-stone-500 ml-1 group-hover:text-green-400 transition-colors duration-300">
               {props.retweets}
             </h2>
           </div>
           <div className="flex items-center group cursor-pointer">
-            <LikeIcon className="fill-stone-500 group-hover:fill-red-600 w-8 h-8 transition-colors duration-300" />
+            <LikeIcon className="fill-stone-500 group-hover:fill-red-600 w-6 h-6 transition-colors duration-300" />
             <h2 className="text-stone-500 ml-1 group-hover:text-red-600 transition-colors duration-300">
               {props.likes}
             </h2>

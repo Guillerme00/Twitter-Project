@@ -10,10 +10,12 @@ import XIcon from "../assets/icons/x_logo.svg?react";
 
 type PostProps = {
   id: number;
-  name: string;
-  username: string;
-  profileImage: string;
-  content: string;
+  author: {
+    name: string;
+    username: string;
+    profileImage: string;
+  }
+  post_body: string;
   postImage?: string;
   comments: number;
   likes: number;
@@ -90,7 +92,6 @@ export function Feed() {
     }
     handleInit()
   }, [])
-
 
   useEffect(() => {
     if (!accessToken) return
@@ -234,15 +235,16 @@ export function Feed() {
             </div>
           </div>
           {Posts.map((post) => (
+            console.log(post),
             <Post
               key={post.id}
-              name={post.name}
-              username={post.username}
-              profileImage={post.profileImage}
+              name={post.author.name}
+              username={post.author.username}
+              profileImage={post.author.profileImage}
               comments={post.comments}
               likes={post.likes}
               retweets={post.retweets}
-              content={post.content}
+              content={post.post_body}
               postImage={post.postImage}
               created_at={post.created_at}
             />
