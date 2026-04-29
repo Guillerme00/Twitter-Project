@@ -33,43 +33,51 @@ function CalcTemp(created_at: string) {
 
 export function Post(props: PostProps) {
   return (
-    <div className="bg-black flex p-4">
+    <div className="bg-black flex p-4 mr-2">
       <img
-        className="rounded-full w-[64px] h-[64px] cursor-pointer self-start"
+        className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
         src={props.profileImage}
         alt="profile_picture"
       />
       <div className="flex flex-col flex-1 ml-3">
-        <div className="flex items-center mb-2">
-          <h2 className="pr-1 text-white text-xl">{props.name}</h2>
-          <h2 className="pr-1 text-stone-500 text-xl">@{props.username}</h2>
-          <h4 className="text-stone-500 text-lg">
+        <div className="flex items-center">
+          <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
+            {props.name}
+          </h2>
+          <h2 className="pr-1 text-stone-500 text-[16px]">@{props.username}</h2>
+          <h4 className="text-stone-500 text-[16px]">
             {" "}
             · {CalcTemp(props.created_at)}
           </h4>
         </div>
 
-        <h2 className="text-white text-xl">{props.content}</h2>
+        <h2 className="text-[#E7E9EA] text-[18px]">{props.content}</h2>
         {props.postImage && (
           <img
-            className="w-full rounded-md mt-4 mb-4"
+            className="w-full rounded-md mt-4 mb-4 object-cover cursor-pointer"
             src={props.postImage}
             alt=""
           />
         )}
 
         <div className="flex justify-center gap-32">
-          <div className="flex items-center">
-            <CommentIcon className="fill-white cursor-pointer hover:fill-blue-500" />
-            <h2 className="text-white ml-1">{props.comments}</h2>
+          <div className="flex items-center group cursor-pointer">
+            <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-8 h-8 transition-colors duration-300" />
+            <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
+              {props.comments}
+            </h2>
           </div>
-          <div className="flex items-center">
-            <RetweetIcon className="fill-white cursor-pointer hover:fill-green-400" />
-            <h2 className="text-white ml-1">{props.retweets}</h2>
+          <div className="flex items-center group cursor-pointer">
+            <RetweetIcon className="fill-stone-500 group-hover:fill-green-400 w-8 h-8 transition-colors duration-300" />
+            <h2 className="text-stone-500 ml-1 group-hover:text-green-400 transition-colors duration-300">
+              {props.retweets}
+            </h2>
           </div>
-          <div className="flex items-center">
-            <LikeIcon className="fill-white cursor-pointer hover:fill-red-600" />
-            <h2 className="text-white ml-1">{props.likes}</h2>
+          <div className="flex items-center group cursor-pointer">
+            <LikeIcon className="fill-stone-500 group-hover:fill-red-600 w-8 h-8 transition-colors duration-300" />
+            <h2 className="text-stone-500 ml-1 group-hover:text-red-600 transition-colors duration-300">
+              {props.likes}
+            </h2>
           </div>
         </div>
       </div>

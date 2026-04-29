@@ -11,7 +11,7 @@ class PostModel(models.Model):
     post_body = models.CharField(
         blank=False,
         null=False,
-        max_length=1200
+        max_length=500
     )
     likes = models.ManyToManyField(
         UserModel,
