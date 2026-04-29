@@ -119,8 +119,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh = request.COOKIES.get("refresh_token")
-        print("COOKIE:", request.COOKIES)
-        print("REFRESH:", refresh)
         if not refresh:
             return Response({"error": "No refresh token"}, status=400)
         data = {"refresh": refresh}

@@ -102,7 +102,6 @@ export function Feed() {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-        console.log(response.data.results);
         UsePosts(response.data.results);
       } catch (error) {
         console.log(error);
@@ -123,7 +122,7 @@ export function Feed() {
     }
     try {
       const response = await api.post(
-        "/posts",
+        "/posts/",
         formData,
         {headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -209,6 +208,7 @@ export function Feed() {
                     }
                   }
                 }}
+                value={postMessage}
               />
               </div>
               {preview && (
