@@ -14,12 +14,13 @@ type PostProps = {
     name: string;
     username: string;
     profileImage: string;
-  }
+  };
+
   post_body: string;
   postImage?: string;
-  comments: number;
-  likes: number;
-  retweets: number;
+  comments: [];
+  likes: [];
+  retweets: [];
   created_at: string;
 };
 const api = axios.create({
@@ -27,43 +28,40 @@ const api = axios.create({
   withCredentials: true,
 });
 
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
-          const { setAccessToken } = useAuthStore.getState();
-          const res = await axios.post(
-            "http://localhost:8000/api/token/refresh/",
-            {},
-            { withCredentials: true },
-          );
+        const { setAccessToken } = useAuthStore.getState();
+        const res = await axios.post(
+          "http://localhost:8000/api/token/refresh/",
+          {},
+          { withCredentials: true },
+        );
 
-          setAccessToken(res.data.access);
+        setAccessToken(res.data.access);
 
-          originalRequest.headers["Authorization"] =
-            `Bearer ${res.data.access}`;
+        originalRequest.headers["Authorization"] = `Bearer ${res.data.access}`;
 
-          return api(originalRequest);
-        } catch (err) {
-          console.log(err);
-        }
+        return api(originalRequest);
+      } catch (err) {
+        console.log(err);
       }
+    }
 
-      return Promise.reject(error);
-    },
-  );
+    return Promise.reject(error);
+  },
+);
 
 export function Feed() {
   //consts
   const accessToken = useAuthStore((state) => state.accessToken);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
-
 
   //states
   const [postMessage, setPostMessage] = useState("");
@@ -76,26 +74,25 @@ export function Feed() {
 
   // UseEffects
   useEffect(() => {
-    if (accessToken) return
-    const handleInit = async() => {
-        try {
-            const res = await axios.post(
-              "http://localhost:8000/api/token/refresh/",
-              {},
-              { withCredentials: true },
-            );
-            setAccessToken(res.data.access);
-
-        } catch (err) {
-          console.log(err) //after implement redirect do login
+    if (accessToken) return;
+    const handleInit = async () => {
+      try {
+        const res = await axios.post(
+          "http://localhost:8000/api/token/refresh/",
+          {},
+          { withCredentials: true },
+        );
+        setAccessToken(res.data.access);
+      } catch (err) {
+        console.log(err); //after implement redirect do login
       }
-    }
-    handleInit()
-  }, [])
+    };
+    handleInit();
+  }, [accessToken, setAccessToken]);
 
   useEffect(() => {
-    if (!accessToken) return
-    
+    if (!accessToken) return;
+
     const fetchPosts = async () => {
       try {
         const response = await api.get("/posts", {
@@ -114,29 +111,27 @@ export function Feed() {
   //functions
 
   const handlePost = async () => {
-    const formData = new FormData()
+    const formData = new FormData();
     if (image) {
       formData.append("post_body", postMessage);
       formData.append("file", image);
     } else {
-      formData.append("post_body", postMessage)
+      formData.append("post_body", postMessage);
     }
     try {
-      const response = await api.post(
-        "/posts/",
-        formData,
-        {headers: {
+      const response = await api.post("/posts/", formData, {
+        headers: {
           Authorization: `Bearer ${accessToken}`,
-        }},
-      )
-      setImage(null)
-      setPreview(null)
-      setPostMessage("")
-      console.log(response)
+        },
+      });
+      setImage(null);
+      setPreview(null);
+      setPostMessage("");
+      console.log(response);
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
-  }
+  };
 
   // Body
   return (
@@ -179,42 +174,46 @@ export function Feed() {
             <div className="flex flex-col">
               <div className="flex">
                 <img
-                src="https://placehold.co/48x48"
-                alt="profile_picture"
-                className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
-              />
-              <textarea
-                placeholder="What's happening?"
-                className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none border-b border-stone-800"
-                onChange={(s) => {
-                  setPostMessage(s.target.value);
-                  s.target.style.height = "auto";
-                  s.target.style.height = s.target.scrollHeight + "px";
-                }}
-                onPaste={(e) => {
-                  const items = e.clipboardData.items;
+                  src="https://placehold.co/48x48"
+                  alt="profile_picture"
+                  className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
+                />
+                <textarea
+                  placeholder="What's happening?"
+                  className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none border-b border-stone-800"
+                  onChange={(s) => {
+                    setPostMessage(s.target.value);
+                    s.target.style.height = "auto";
+                    s.target.style.height = s.target.scrollHeight + "px";
+                  }}
+                  onPaste={(e) => {
+                    const items = e.clipboardData.items;
 
-                  for (let i = 0; i < items.length; i++) {
-                    const item = items[i]
+                    for (let i = 0; i < items.length; i++) {
+                      const item = items[i];
 
-                    if (item.type.startsWith("image")) {
-                      const file = item.getAsFile();
+                      if (item.type.startsWith("image")) {
+                        const file = item.getAsFile();
 
-                      if (file) {
-                        setImage(file)
+                        if (file) {
+                          setImage(file);
 
-                        const url = URL.createObjectURL(file)
-                        setPreview(url)
+                          const url = URL.createObjectURL(file);
+                          setPreview(url);
+                        }
                       }
                     }
-                  }
-                }}
-                value={postMessage}
-              />
+                  }}
+                  value={postMessage}
+                />
               </div>
               {preview && (
                 <>
-                  <img src={preview} alt="preview" className="mt-2 rounded-xl max-h-80 object-cover" />
+                  <img
+                    src={preview}
+                    alt="preview"
+                    className="mt-2 rounded-xl max-h-80 object-cover"
+                  />
                   <div className="border-b border-stone-800 pb-4" />
                 </>
               )}
@@ -228,27 +227,31 @@ export function Feed() {
                     : "bg-stone-700 text-black opacity-50 cursor-not-allowed"
                 }
               `}
-              onClick={handlePost}
+                onClick={handlePost}
               >
                 Post
               </button>
             </div>
           </div>
-          {Posts.map((post) => (
-            console.log(post),
-            <Post
-              key={post.id}
-              name={post.author.name}
-              username={post.author.username}
-              profileImage={post.author.profileImage}
-              comments={post.comments}
-              likes={post.likes}
-              retweets={post.retweets}
-              content={post.post_body}
-              postImage={post.postImage}
-              created_at={post.created_at}
-            />
-          ))}
+          {Posts.map(
+            (post) => (
+              console.log(post),
+              (
+                <Post
+                  key={post.id}
+                  name={post.author.name}
+                  username={post.author.username}
+                  profileImage={post.author.profileImage}
+                  comments={post.comments}
+                  likes={post.likes}
+                  retweets={post.retweets}
+                  content={post.post_body}
+                  postImage={post.postImage}
+                  created_at={post.created_at}
+                />
+              )
+            ),
+          )}
         </div>
 
         {/* right side */}
