@@ -2,6 +2,7 @@ import { Post } from "../components/post";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuthStore } from "../store/AuthStore";
+import { useNavigate } from "react-router-dom";
 
 import HomeIcon from "../assets/icons/home.svg?react";
 import MeIcon from "../assets/icons/me.svg?react";
@@ -13,16 +14,30 @@ type PostProps = {
   author: {
     name: string;
     username: string;
-    profileImage: string;
+    profile_image: string;
   };
 
   post_body: string;
-  postImage?: string;
+  post_image?: string;
   comments: [];
   likes: [];
   retweets: [];
   created_at: string;
 };
+
+type ActualUser = {
+  id: number;
+  name: string;
+  email: string;
+  username: string;
+  profile_image: string;
+  profile_banner: string;
+  bio: string;
+  followers_count: number;
+  following_count: number;
+  bithday: string;
+};
+
 const api = axios.create({
   baseURL: "http://localhost:8000/api",
   withCredentials: true,
@@ -62,8 +77,10 @@ export function Feed() {
   //consts
   const accessToken = useAuthStore((state) => state.accessToken);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
+  const navigate = useNavigate();
 
   //states
+  const [actualUser, setActualUser] = useState<ActualUser | null>(null);
   const [postMessage, setPostMessage] = useState("");
   const [Posts, UsePosts] = useState<PostProps[]>([]);
   const [image, setImage] = useState<File | null>(null);
@@ -77,36 +94,38 @@ export function Feed() {
     if (accessToken) return;
     const handleInit = async () => {
       try {
-        const res = await axios.post(
-          "http://localhost:8000/api/token/refresh/",
-          {},
-          { withCredentials: true },
-        );
-        setAccessToken(res.data.access);
-      } catch (err) {
-        console.log(err); //after implement redirect do login
-      }
-    };
-    handleInit();
-  }, [accessToken, setAccessToken]);
+        let token = accessToken;
 
-  useEffect(() => {
-    if (!accessToken) return;
+        if (!token) {
+          const res = await api.post(
+            "/token/refresh/",
+            {},
+            { withCredentials: true },
+          );
+          token = res.data.access;
+          setAccessToken(res.data.access);
+        }
 
-    const fetchPosts = async () => {
-      try {
-        const response = await api.get("/posts", {
+        const response = await api.get("/posts/", {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         UsePosts(response.data.results);
-      } catch (error) {
-        console.log(error);
+
+        const actual_user_response = await api.get("/users/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setActualUser(actual_user_response.data);
+      } catch (err) {
+        console.log(err);
+        navigate("/signin");
       }
     };
-    fetchPosts();
-  }, [accessToken]);
+    handleInit();
+  }, [accessToken, setAccessToken, navigate, actualUser]);
 
   //functions
 
@@ -174,7 +193,7 @@ export function Feed() {
             <div className="flex flex-col">
               <div className="flex">
                 <img
-                  src="https://placehold.co/48x48"
+                  src={actualUser?.profile_image}
                   alt="profile_picture"
                   className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
                 />
@@ -235,18 +254,18 @@ export function Feed() {
           </div>
           {Posts.map(
             (post) => (
-              console.log(post),
+              console.log(post.author.profile_image),
               (
                 <Post
                   key={post.id}
                   name={post.author.name}
                   username={post.author.username}
-                  profileImage={post.author.profileImage}
+                  profileImage={post.author.profile_image}
                   comments={post.comments}
                   likes={post.likes}
                   retweets={post.retweets}
                   content={post.post_body}
-                  postImage={post.postImage}
+                  postImage={post.post_image}
                   created_at={post.created_at}
                 />
               )
