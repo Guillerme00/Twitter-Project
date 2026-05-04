@@ -7,7 +7,11 @@ type PostProps = {
   username: string;
   profileImage: string;
   content: string;
-  postImage?: string;
+  medias?: {
+    id: number;
+    file: string;
+    order: number;
+  }[];
   comments: [];
   likes: [];
   retweets: [];
@@ -39,7 +43,7 @@ export function Post(props: PostProps) {
         src={props.profileImage}
         alt="profile_picture"
       />
-      <div className="flex flex-col flex-1 ml-3">
+      <div className="flex flex-col ml-3">
         <div className="flex items-center">
           <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
             {props.name}
@@ -52,13 +56,15 @@ export function Post(props: PostProps) {
         </div>
 
         <h2 className="text-[#E7E9EA] text-[18px]">{props.content}</h2>
-        {props.postImage && (
-          <img
-            className="w-full rounded-md mt-4 mb-4 object-cover cursor-pointer"
-            src={props.postImage}
-            alt=""
-          />
-        )}
+        {props.medias &&
+          props.medias.map((media) => (
+            <img
+              className="w-full rounded-md block mt-4 mb-4 max-w-[400px] object-cover cursor-pointer"
+              src={media.file}
+              alt=""
+              key={media.id}
+            />
+          ))}
 
         <div className="flex justify-center gap-32 mt-4 pr-16">
           <div className="flex items-center group cursor-pointer">

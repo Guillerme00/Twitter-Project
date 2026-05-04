@@ -1,4 +1,3 @@
-import { Post } from "../components/post";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuthStore } from "../store/AuthStore";
@@ -8,22 +7,9 @@ import HomeIcon from "../assets/icons/home.svg?react";
 import MeIcon from "../assets/icons/me.svg?react";
 import SettingsIcon from "../assets/icons/settings.svg?react";
 import XIcon from "../assets/icons/x_logo.svg?react";
-
-type PostProps = {
-  id: number;
-  author: {
-    name: string;
-    username: string;
-    profile_image: string;
-  };
-
-  post_body: string;
-  post_image?: string;
-  comments: [];
-  likes: [];
-  retweets: [];
-  created_at: string;
-};
+import CommentIcon from "../assets/icons/comment-alt.svg?react";
+import LikeIcon from "../assets/icons/heart.svg?react";
+import RetweetIcon from "../assets/icons/retweet.svg?react";
 
 type ActualUser = {
   id: number;
@@ -36,6 +22,33 @@ type ActualUser = {
   followers_count: number;
   following_count: number;
   bithday: string;
+};
+
+type PostProps = {
+  author: {
+    bio: string;
+    birthday: string;
+    email: string;
+    followers_count: number;
+    following_count: number;
+    id: number;
+    name: string;
+    profile_banner: string;
+    profile_image: string;
+    username: string;
+  };
+  comments: [];
+  created_at: string;
+  id: number;
+  likes: number[];
+  likes_count: number;
+  medias: {
+    id: number;
+    file: string;
+    order: number;
+  }[];
+  post_body: string;
+  retweets: string[];
 };
 
 const api = axios.create({
@@ -89,6 +102,23 @@ export function Feed() {
   //functions
   const validPost = postMessage.length >= 1 && postMessage.length <= 500;
 
+  function CalcTemp(created_at: string) {
+    const now = new Date();
+    const postDate = new Date(created_at);
+    const time = now.getTime() - postDate.getTime();
+    if (time / 1000 < 1) {
+      return "1s";
+    } else if (time / 1000 < 60) {
+      return `${Math.floor(time / 1000)}s`; //seconds
+    } else if (time / 60000 < 60) {
+      return `${Math.floor(time / 60000)}m`; //minutes
+    } else if (time / 3600000 < 24) {
+      return `${Math.floor(time / 3600000)}h`; //hours
+    } else {
+      return `${postDate.getDate()}/${postDate.getMonth() + 1}/${postDate.getFullYear()}`; //day
+    }
+  }
+
   // UseEffects
   useEffect(() => {
     if (accessToken) return;
@@ -128,12 +158,11 @@ export function Feed() {
   }, [accessToken, setAccessToken, navigate, actualUser]);
 
   //functions
-
   const handlePost = async () => {
     const formData = new FormData();
     if (image) {
       formData.append("post_body", postMessage);
-      formData.append("file", image);
+      formData.append("files", image);
     } else {
       formData.append("post_body", postMessage);
     }
@@ -150,6 +179,18 @@ export function Feed() {
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const like = (id: number) => {
+    api.post(
+      `/posts/${id}/like_unlike_post/`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    );
   };
 
   // Body
@@ -253,22 +294,70 @@ export function Feed() {
             </div>
           </div>
           {Posts.map(
-            (post) => (
-              console.log(post.author.profile_image),
-              (
-                <Post
-                  key={post.id}
-                  name={post.author.name}
-                  username={post.author.username}
-                  profileImage={post.author.profile_image}
-                  comments={post.comments}
-                  likes={post.likes}
-                  retweets={post.retweets}
-                  content={post.post_body}
-                  postImage={post.post_image}
-                  created_at={post.created_at}
+            (
+              post, // HERE HERE HERE HERE HERE HERE HERE HERE
+            ) => (
+              <div
+                className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%]"
+                key={post.id}
+              >
+                <img
+                  className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
+                  src={post.author.profile_image}
+                  alt="profile_picture"
                 />
-              )
+                <div className="flex flex-col ml-3">
+                  <div className="flex items-center">
+                    <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
+                      {post.author.name}
+                    </h2>
+                    <h2 className="pr-1 text-stone-500 text-[16px]">
+                      @{post.author.username}
+                    </h2>
+                    <h4 className="text-stone-500 text-[16px]">
+                      {" "}
+                      · {CalcTemp(post.created_at)}
+                    </h4>
+                  </div>
+
+                  <h2 className="text-[#E7E9EA] text-[18px]">
+                    {post.post_body}
+                  </h2>
+                  {post.medias &&
+                    post.medias.map((media) => (
+                      <img
+                        className="w-full rounded-md block mt-4 mb-4 max-w-[400px] object-cover cursor-pointer"
+                        src={media.file}
+                        alt=""
+                        key={media.id}
+                      />
+                    ))}
+
+                  <div className="flex justify-center gap-32 mt-4 pr-16">
+                    <div className="flex items-center group cursor-pointer">
+                      <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
+                      <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
+                        {post.comments.length}
+                      </h2>
+                    </div>
+                    <div className="flex items-center group cursor-pointer">
+                      <RetweetIcon className="fill-stone-500 group-hover:fill-green-400 w-6 h-6 transition-colors duration-300" />
+                      <h2 className="text-stone-500 ml-1 group-hover:text-green-400 transition-colors duration-300">
+                        {post.retweets.length}
+                      </h2>
+                    </div>
+                    <div className="flex items-center group cursor-pointer">
+                      <LikeIcon
+                        className="fill-stone-500 group-hover:fill-red-600 w-6 h-6 transition-colors duration-300"
+                        onClick={() => like(post.id)}
+                      />
+                      <h2 className="text-stone-500 ml-1 group-hover:text-red-600 transition-colors duration-300">
+                        {post.likes.length}
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ),
           )}
         </div>
