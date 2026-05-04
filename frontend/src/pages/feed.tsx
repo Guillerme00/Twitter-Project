@@ -48,7 +48,7 @@ type PostProps = {
     order: number;
   }[];
   post_body: string;
-  retweets: string[];
+  retweets: number[];
 };
 
 const api = axios.create({
@@ -181,16 +181,75 @@ export function Feed() {
     }
   };
 
-  const like = (id: number) => {
-    api.post(
-      `/posts/${id}/like_unlike_post/`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      },
-    );
+  const retweet = async(id: number) => {
+    if (!actualUser) return
+
+    let previousPosts: PostProps[] = []
+
+    UsePosts((prevPosts) => {
+      previousPosts = prevPosts;
+
+      return prevPosts.map((post) =>
+        post.id === id
+          ? {
+              ...post,
+              retweets: post.retweets.includes(actualUser.id)
+                ? post.retweets.filter((retweet) => retweet !== actualUser.id)
+                : [...post.retweets, actualUser.id],
+            }
+          : post
+      );
+    });
+
+    try {
+      await api.post(
+        `/posts/${id}/retweet/`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+    } catch (err) {
+      UsePosts(previousPosts);
+      console.log(err);
+    }
+  }
+  const like = async (id: number) => {
+    if (!actualUser) return;
+
+    let previousPosts: PostProps[] = [];
+
+    UsePosts((prevPosts) => {
+      previousPosts = prevPosts;
+
+      return prevPosts.map((post) =>
+        post.id === id
+          ? {
+              ...post,
+              likes: post.likes.includes(actualUser.id)
+                ? post.likes.filter((like) => like !== actualUser.id)
+                : [...post.likes, actualUser.id],
+            }
+          : post
+      );
+    });
+
+    try {
+      await api.post(
+        `/posts/${id}/like_unlike_post/`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+    } catch (err) {
+      UsePosts(previousPosts);
+      console.log(err);
+    }
   };
 
   // Body
@@ -296,7 +355,11 @@ export function Feed() {
           {Posts.map(
             (
               post, // HERE HERE HERE HERE HERE HERE HERE HERE
-            ) => (
+            ) => {
+              const isLiked = actualUser ? post.likes.includes(actualUser.id) : false
+              const isRetweeted = actualUser ? post.retweets.includes(actualUser.id) : false
+              
+              return (
               <div
                 className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%]"
                 key={post.id}
@@ -340,25 +403,50 @@ export function Feed() {
                         {post.comments.length}
                       </h2>
                     </div>
+                    
+                    
                     <div className="flex items-center group cursor-pointer">
-                      <RetweetIcon className="fill-stone-500 group-hover:fill-green-400 w-6 h-6 transition-colors duration-300" />
-                      <h2 className="text-stone-500 ml-1 group-hover:text-green-400 transition-colors duration-300">
+                      <RetweetIcon
+                      className={`w-6 h-6 transition-colors duration-300 ${
+                        isRetweeted
+                        ? "fill-green-500"
+                        : "fill-stone-500 group-hover:fill-green-500"
+                      }`}
+                      onClick={() => retweet(post.id)}
+                      />
+                      <h2
+                        className={`ml-1 transition-colors duration-300 ${
+                          isRetweeted ? "text-green-500" : "text-stone-500"
+                        }`}
+                      >
                         {post.retweets.length}
                       </h2>
                     </div>
+                    
+                    
                     <div className="flex items-center group cursor-pointer">
                       <LikeIcon
-                        className="fill-stone-500 group-hover:fill-red-600 w-6 h-6 transition-colors duration-300"
+                        className={`w-6 h-6 transition-colors duration-300 ${
+                          isLiked
+                            ? "fill-red-600"
+                            : "fill-stone-500 group-hover:fill-red-600"
+                        }`}
                         onClick={() => like(post.id)}
                       />
-                      <h2 className="text-stone-500 ml-1 group-hover:text-red-600 transition-colors duration-300">
+
+                      <h2
+                        className={`ml-1 transition-colors duration-300 ${
+                          isLiked ? "text-red-600" : "text-stone-500"
+                        }`}
+                      >
                         {post.likes.length}
                       </h2>
                     </div>
                   </div>
                 </div>
               </div>
-            ),
+              )
+            },
           )}
         </div>
 
