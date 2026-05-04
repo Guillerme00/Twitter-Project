@@ -48,7 +48,12 @@ type PostProps = {
     order: number;
   }[];
   post_body: string;
-  retweets: number[];
+  retweets: {
+    author: number,
+    created_at: string,
+    id: number,
+    post: number
+  }[];
 };
 
 const api = axios.create({
@@ -193,7 +198,7 @@ export function Feed() {
         post.id === id
           ? {
               ...post,
-              retweets: post.retweets.includes(actualUser.id)
+              retweets: post.retweets.author.includes(actualUser.id)
                 ? post.retweets.filter((retweet) => retweet !== actualUser.id)
                 : [...post.retweets, actualUser.id],
             }
@@ -237,7 +242,7 @@ export function Feed() {
     });
 
     try {
-      await api.post(
+      const response = await api.post(
         `/posts/${id}/like_unlike_post/`,
         {},
         {
@@ -246,6 +251,7 @@ export function Feed() {
           },
         }
       );
+      console.log(response.data);
     } catch (err) {
       UsePosts(previousPosts);
       console.log(err);
@@ -357,8 +363,7 @@ export function Feed() {
               post, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => {
               const isLiked = actualUser ? post.likes.includes(actualUser.id) : false
-              const isRetweeted = actualUser ? post.retweets.includes(actualUser.id) : false
-              
+              const isRetweeted = actualUser ? post.retweets.some(id => Number(id) === actualUser.id) : false
               return (
               <div
                 className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%]"
@@ -405,14 +410,13 @@ export function Feed() {
                     </div>
                     
                     
-                    <div className="flex items-center group cursor-pointer">
+                    <div className="flex items-center group cursor-pointer" onClick={() => retweet(post.id)}>
                       <RetweetIcon
                       className={`w-6 h-6 transition-colors duration-300 ${
                         isRetweeted
                         ? "fill-green-500"
                         : "fill-stone-500 group-hover:fill-green-500"
                       }`}
-                      onClick={() => retweet(post.id)}
                       />
                       <h2
                         className={`ml-1 transition-colors duration-300 ${
@@ -424,14 +428,13 @@ export function Feed() {
                     </div>
                     
                     
-                    <div className="flex items-center group cursor-pointer">
+                    <div className="flex items-center group cursor-pointer" onClick={() => like(post.id)}>
                       <LikeIcon
                         className={`w-6 h-6 transition-colors duration-300 ${
                           isLiked
                             ? "fill-red-600"
                             : "fill-stone-500 group-hover:fill-red-600"
                         }`}
-                        onClick={() => like(post.id)}
                       />
 
                       <h2
