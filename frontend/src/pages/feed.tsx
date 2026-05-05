@@ -11,6 +11,8 @@ import CommentIcon from "../assets/icons/comment-alt.svg?react";
 import LikeIcon from "../assets/icons/heart.svg?react";
 import RetweetIcon from "../assets/icons/retweet.svg?react";
 
+import { CommentInPost } from "../components/comment";
+
 type ActualUser = {
   id: number;
   name: string;
@@ -186,26 +188,36 @@ export function Feed() {
     }
   };
 
-  const retweet = async(id: number) => {
-    if (!actualUser) return
+  const retweet = async (id: number) => {
+  if (!actualUser) return;
 
-    let previousPosts: PostProps[] = []
-
+  let previousPosts: PostProps[] = [];
     UsePosts((prevPosts) => {
       previousPosts = prevPosts;
 
-      return prevPosts.map((post) =>
-        post.id === id
-          ? {
-              ...post,
-              retweets: post.retweets.author.includes(actualUser.id)
-                ? post.retweets.filter((retweet) => retweet !== actualUser.id)
-                : [...post.retweets, actualUser.id],
-            }
-          : post
-      );
-    });
+      return prevPosts.map((post) => {
+        if (post.id !== id) return post;
 
+        const alreadyRetweeted = post.retweets.some(
+          (rt) => rt.author === actualUser.id
+        );
+
+        return {
+          ...post,
+          retweets: alreadyRetweeted
+            ? post.retweets.filter((rt) => rt.author !== actualUser.id)
+            : [
+                ...post.retweets,
+                {
+                  id: Date.now(),
+                  author: actualUser.id,
+                  post: id,
+                  created_at: new Date().toISOString(),
+                },
+              ],
+        };
+      });
+    });
     try {
       await api.post(
         `/posts/${id}/retweet/`,
@@ -220,7 +232,7 @@ export function Feed() {
       UsePosts(previousPosts);
       console.log(err);
     }
-  }
+  };
   const like = async (id: number) => {
     if (!actualUser) return;
 
@@ -363,7 +375,7 @@ export function Feed() {
               post, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => {
               const isLiked = actualUser ? post.likes.includes(actualUser.id) : false
-              const isRetweeted = actualUser ? post.retweets.some(id => Number(id) === actualUser.id) : false
+              const isRetweeted = actualUser ? post.retweets.some((rt) => rt.author === actualUser.id) : false;
               return (
               <div
                 className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%]"
@@ -452,7 +464,7 @@ export function Feed() {
             },
           )}
         </div>
-
+          <CommentInPost />
         {/* right side */}
         <div className="w-[420px] px-4">
           <div className="top-0 pt-2">
