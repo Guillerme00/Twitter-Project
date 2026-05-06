@@ -254,7 +254,7 @@ export function Feed() {
     });
 
     try {
-      const response = await api.post(
+      await api.post(
         `/posts/${id}/like_unlike_post/`,
         {},
         {
@@ -263,7 +263,6 @@ export function Feed() {
           },
         }
       );
-      console.log(response.data);
     } catch (err) {
       UsePosts(previousPosts);
       console.log(err);

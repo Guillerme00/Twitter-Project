@@ -1,4 +1,6 @@
+import axios from "axios";
 import { useEffect, useState } from "react"
+import { useAuthStore } from "../store/AuthStore";
 
 const post: PostProps = {
   author: {
@@ -84,6 +86,41 @@ type ActualUser = {
   following_count: number;
   bithday: string;
 };
+
+const api = axios.create({
+  baseURL: "http://localhost:8000/api",
+  withCredentials: true,
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const { setAccessToken } = useAuthStore.getState();
+        const res = await axios.post(
+          "http://localhost:8000/api/token/refresh/",
+          {},
+          { withCredentials: true },
+        );
+
+        setAccessToken(res.data.access);
+
+        originalRequest.headers["Authorization"] = `Bearer ${res.data.access}`;
+
+        return api(originalRequest);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 export function CommentInPost() {
 
