@@ -106,7 +106,7 @@ export function Feed() {
   //states
   const [actualUser, setActualUser] = useState<ActualUser | null>(null);
   const [postMessage, setPostMessage] = useState("");
-  const [Posts, UsePosts] = useState<PostProps[]>([]);
+  const [Posts, setPosts] = useState<PostProps[]>([]);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -132,41 +132,33 @@ export function Feed() {
 
   // UseEffects
   useEffect(() => {
-    if (accessToken) return;
-    const handleInit = async () => {
-      try {
-        let token = accessToken;
+  const handleInit = async () => {
+    try {
+      let token = accessToken;
 
-        if (!token) {
-          const res = await api.post(
-            "/token/refresh/",
-            {},
-            { withCredentials: true },
-          );
-          token = res.data.access;
-          setAccessToken(res.data.access);
-        }
-
-        const response = await api.get("/posts/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        UsePosts(response.data.results);
-
-        const actual_user_response = await api.get("/users/me/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setActualUser(actual_user_response.data);
-      } catch (err) {
-        console.log(err);
-        navigate("/signin");
+      if (!token) {
+        const res = await api.post("/token/refresh/", {}, { withCredentials: true });
+        token = res.data.access;
+        setAccessToken(res.data.access);
       }
-    };
-    handleInit();
-  }, [accessToken, setAccessToken, navigate, actualUser]);
+
+      const response = await api.get("/posts/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPosts(response.data.results);
+
+      const actual_user_response = await api.get("/users/me/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setActualUser(actual_user_response.data);
+    } catch (err) {
+      console.log(err);
+      navigate("/signin");
+    }
+  };
+
+  handleInit();
+}, [accessToken]);
 
   useEffect(() => {
     if (SelectedPost === null) {
@@ -184,15 +176,19 @@ export function Feed() {
       formData.append("post_body", postMessage);
     }
     try {
-      const response = await api.post("/posts/", formData, {
+      await api.post("/posts/", formData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+      const response = await api.get("/posts/", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      setPosts(response.data.results);
       setImage(null);
       setPreview(null);
       setPostMessage("");
-      console.log(response);
     } catch (err) {
       console.log(err);
     }
@@ -202,7 +198,7 @@ export function Feed() {
     if (!actualUser) return;
 
     let previousPosts: PostProps[] = [];
-    UsePosts((prevPosts) => {
+    setPosts((prevPosts) => {
       previousPosts = prevPosts;
 
       return prevPosts.map((post) => {
@@ -239,16 +235,17 @@ export function Feed() {
         },
       );
     } catch (err) {
-      UsePosts(previousPosts);
+      setPosts(previousPosts);
       console.log(err);
     }
   };
+
   const like = async (id: number) => {
     if (!actualUser) return;
 
     let previousPosts: PostProps[] = [];
 
-    UsePosts((prevPosts) => {
+    setPosts((prevPosts) => {
       previousPosts = prevPosts;
 
       return prevPosts.map((post) =>
@@ -274,10 +271,11 @@ export function Feed() {
         },
       );
     } catch (err) {
-      UsePosts(previousPosts);
+      setPosts(previousPosts);
       console.log(err);
     }
   };
+  
   // Body
   return (
     // Left Side
@@ -390,8 +388,9 @@ export function Feed() {
                 : false;
               return (
                 <div
-                  className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%]"
+                  className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer"
                   key={post.id}
+                  onClick={() => navigate(`/post/${post.id}`)}
                 >
                   <img
                     className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
@@ -428,7 +427,7 @@ export function Feed() {
                     <div className="flex justify-center gap-32 mt-4 pr-16">
                       <div
                         className="flex items-center group cursor-pointer"
-                        onClick={() => setSelectedPost(post)}>
+                        onClick={(e) => {e.stopPropagation(); setSelectedPost(post)}}>
                         <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
                         <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
                           {post.comments.length}
@@ -437,7 +436,7 @@ export function Feed() {
 
                       <div
                         className="flex items-center group cursor-pointer"
-                        onClick={() => retweet(post.id)}
+                        onClick={(e) => {e.stopPropagation(); retweet(post.id)}}
                       >
                         <RetweetIcon
                           className={`w-6 h-6 transition-colors duration-300 ${
@@ -457,7 +456,7 @@ export function Feed() {
 
                       <div
                         className="flex items-center group cursor-pointer"
-                        onClick={() => like(post.id)}
+                        onClick={(e) => {e.stopPropagation(); like(post.id)}}
                       >
                         <LikeIcon
                           className={`w-6 h-6 transition-colors duration-300 ${
