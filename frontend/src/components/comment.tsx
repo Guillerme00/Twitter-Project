@@ -141,7 +141,7 @@ export function CommentInPost({ post, user, token }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-      <div className="bg-stone-900 max-w-800 w-[800px] p-4 rounded-xl">
+      <div className="bg-stone-900 w-full max-w-[800px] p-4 rounded-xl overflow-y-auto max-h-[90vh] overflow-x-hidden">
         <div>
           <button
           className="hover:bg-stone-800 w-8 h-8 flex items-center justify-center rounded-full font-bold cursor-pointer text-[20px] transition-colors duration-300"
@@ -194,7 +194,7 @@ export function CommentInPost({ post, user, token }: Props) {
                 className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
               />
               <textarea
-                placeholder="What's happening?"
+                placeholder="Post your reply"
                 className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none"
                 onChange={(s) => {
                   setpostComment(s.target.value);
