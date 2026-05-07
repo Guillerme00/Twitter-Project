@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 import axios from "axios";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "../store/AuthStore";
 import { useNavigate } from "react-router-dom";
 
@@ -12,6 +12,7 @@ import LikeIcon from "../assets/icons/heart.svg?react";
 import RetweetIcon from "../assets/icons/retweet.svg?react";
 
 import { CommentInPost } from "../components/comment";
+import { useSelectedPostStore } from "../store/SelectedPostStore";
 
 type ActualUser = {
   id: number;
@@ -95,46 +96,12 @@ api.interceptors.response.use(
 
 export function Feed() {
   //consts
+  const selectedPost = useSelectedPostStore((state) => state.selectedPost);
   const accessToken = useAuthStore((state) => state.accessToken);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const navigate = useNavigate();
-  const postExample: PostProps = {
-    author: {
-      bio: "Desenvolvedor fullstack apaixonado por UI.",
-      birthday: "2005-08-12",
-      email: "gui@example.com",
-      followers_count: 152,
-      following_count: 89,
-      id: 1,
-      name: "Guilherme",
-      profile_banner:
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-      profile_image: "https://placehold.co/600x600",
-      username: "gui_dev",
-    },
-    comments: [],
-    created_at: "2026-05-06T13:00:00Z",
-    id: 1,
-    likes: [2, 5, 8],
-    likes_count: 3,
-    medias: [
-      {
-        id: 1,
-        file: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4",
-        order: 1,
-      },
-    ],
-    post_body:
-      "alulululululuUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU",
-    retweets: [
-      {
-        author: 2,
-        created_at: "2026-05-06T13:10:00Z",
-        id: 1,
-        post: 101,
-      },
-    ],
-  };
+  const setSelectedPost = useSelectedPostStore((state) => state.setSelectedPost);
+  const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
 
   //states
   const [actualUser, setActualUser] = useState<ActualUser | null>(null);
@@ -200,6 +167,12 @@ export function Feed() {
     };
     handleInit();
   }, [accessToken, setAccessToken, navigate, actualUser]);
+
+  useEffect(() => {
+    if (SelectedPost === null) {
+      document.body.style.overflow = "auto";
+    }
+  }, [SelectedPost])
 
   //functions
   const handlePost = async () => {
@@ -305,7 +278,6 @@ export function Feed() {
       console.log(err);
     }
   };
-
   // Body
   return (
     // Left Side
@@ -454,7 +426,9 @@ export function Feed() {
                       ))}
 
                     <div className="flex justify-center gap-32 mt-4 pr-16">
-                      <div className="flex items-center group cursor-pointer">
+                      <div
+                        className="flex items-center group cursor-pointer"
+                        onClick={() => setSelectedPost(post)}>
                         <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
                         <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
                           {post.comments.length}
@@ -508,9 +482,9 @@ export function Feed() {
             },
           )}
         </div>
-        {actualUser && accessToken ? (
+        {actualUser && accessToken && selectedPost ? (
           <CommentInPost
-            post={postExample}
+            post={selectedPost}
             user={actualUser}
             token={accessToken}
           />

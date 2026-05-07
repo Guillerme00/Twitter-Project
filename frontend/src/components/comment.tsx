@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/AuthStore";
+import { useSelectedPostStore } from "../store/SelectedPostStore";
 
 type Props = {
   post: PostProps;
@@ -90,7 +91,10 @@ api.interceptors.response.use(
 
 export function CommentInPost({ post, user, token }: Props) {
   const [postComment, setpostComment] = useState("");
+
+
   const validPost = postComment.length >= 1 && postComment.length <= 500;
+  const setSelectedPost = useSelectedPostStore((state) => state.setSelectedPost);
 
   function CalcTemp(created_at: string) {
     const now = new Date();
@@ -127,7 +131,8 @@ export function CommentInPost({ post, user, token }: Props) {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(post.comments);
+      setpostComment("")
+      setSelectedPost(null)
       return console.log(response);
     } catch (err) {
       console.log(err);
@@ -138,7 +143,10 @@ export function CommentInPost({ post, user, token }: Props) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
       <div className="bg-stone-900 max-w-800 w-[800px] p-4 rounded-xl">
         <div>
-          <button className="hover:bg-stone-800 w-8 h-8 flex items-center justify-center rounded-full font-bold cursor-pointer text-[20px] transition-colors duration-300">
+          <button
+          className="hover:bg-stone-800 w-8 h-8 flex items-center justify-center rounded-full font-bold cursor-pointer text-[20px] transition-colors duration-300"
+          onClick={() => setSelectedPost(null)}
+          >
             X
           </button>
         </div>{" "}
@@ -187,7 +195,7 @@ export function CommentInPost({ post, user, token }: Props) {
               />
               <textarea
                 placeholder="What's happening?"
-                className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none border-b border-stone-800"
+                className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none"
                 onChange={(s) => {
                   setpostComment(s.target.value);
                   s.target.style.height = "auto";
@@ -197,23 +205,17 @@ export function CommentInPost({ post, user, token }: Props) {
               />
             </div>
           </div>
-          <div className="flex justify-end mt-2">
-            <button
-              disabled={!validPost}
-              className={`text-black font-bold p-2 pr-4 pl-4 rounded-full transition-all duration-300 ${
+        </div>
+        <div className="flex justify-end mt-4">
+          <button className={`hover:bg-stone-300 w-24 h-8 p-1 pr-2 pl-2 text-bold flex items-center justify-center rounded-full font-bold cursor-pointer text-[16px] bg-[#E7E9EA] text-stone-900 transition-colors duration-300
+          ${
                 validPost
                   ? "bg-[#E7E9EA] text-black hover:bg-[#cfcfcf] cursor-pointer"
                   : "bg-stone-700 text-black opacity-50 cursor-not-allowed"
               }
-                    `}
-              onClick={handlePostComment}
-            >
-              Post
-            </button>
-          </div>
-        </div>
-        <div className="flex justify-end mt-4">
-          <button className="hover:bg-stone-300 w-24 h-8 p-1 pr-2 pl-2 text-bold flex items-center justify-center rounded-full font-bold cursor-pointer text-[16px] bg-[#E7E9EA] text-stone-900 transition-colors duration-300">
+          `}
+          onClick={handlePostComment}
+          >
             Reply
           </button>{" "}
           {/*reply button */}

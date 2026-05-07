@@ -30,5 +30,5 @@ export const useAuthStore = create<AuthState>((set) => ({
       accessToken: null,
     }),
 
-  setAccessToken: (token: string | null) => set({ accessToken: token})
+  setAccessToken: (token: string | null) => set({ accessToken: token}),
 }));
