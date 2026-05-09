@@ -1,5 +1,6 @@
 import axios from "axios";
 import { PageNotFound } from "../components/page_not_found";
+import { PostPageComponent } from "../components/post_page";
 import { useParams  } from "react-router-dom";
 import { useAuthStore } from "../store/AuthStore";
 import { useEffect, useState } from "react";
@@ -78,13 +79,13 @@ export function PostPage () {
     }, [])
 
     return (
-        <div className="bg-black min-h-screen text-[#E7E9EA] flex justify-center">
+        <>
             {exist === "notfound" ?
                 <PageNotFound />
                 : exist === "found" ?
-                <h1>hello world</h1>
+                <PostPageComponent />
                 : false
             }
-        </div>
+        </>
     )
 }
