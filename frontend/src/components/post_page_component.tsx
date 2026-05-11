@@ -7,6 +7,7 @@ import XIcon from "../assets/icons/x_logo.svg?react";
 import CommentIcon from "../assets/icons/comment-alt.svg?react";
 import LikeIcon from "../assets/icons/heart.svg?react";
 import RetweetIcon from "../assets/icons/retweet.svg?react";
+import ArrowIcon from "../assets/icons/arrow.svg?react";
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/AuthStore";
@@ -18,7 +19,6 @@ import { useSelectedPostStore } from "../store/SelectedPostStore";
 type commentProps = {
   liked: boolean;
   retweeted: boolean;
-  temp: string;
   post: {
     author: {
       bio: string;
@@ -102,7 +102,6 @@ api.interceptors.response.use(
 export const PostPageComponent = ({
   liked,
   retweeted,
-  temp,
   post,
 }: commentProps) => {
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -182,6 +181,23 @@ export const PostPageComponent = ({
     }
   }
 
+  const CalcTemp = (created_at: string) => {
+    const now = new Date();
+    const postDate = new Date(created_at);
+    const time = now.getTime() - postDate.getTime();
+    if (time / 1000 < 1) {
+      return "1s";
+    } else if (time / 1000 < 60) {
+      return `${Math.floor(time / 1000)}s`; //seconds
+    } else if (time / 60000 < 60) {
+      return `${Math.floor(time / 60000)}m`; //minutes
+    } else if (time / 3600000 < 24) {
+      return `${Math.floor(time / 3600000)}h`; //hours
+    } else {
+      return `${postDate.getDate()}/${postDate.getMonth() + 1}/${postDate.getFullYear()}`; //day
+    }
+  }
+
   useEffect(() => {
     const handleInit = async () => {
       try {
@@ -238,111 +254,114 @@ export const PostPageComponent = ({
         </div>
 
         {/* mid side */}
-        <div className="border-r border-stone-800 flex-1 max-w-[700px] overflow-y-auto no-scrollbar flex justify-center">
-          <div
-            className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer"
-            key={post.id}
-          >
+        <div className="border-r border-stone-800 flex-1 max-w-[700px] overflow-y-auto no-scrollbar flex flex-col">
+          <div className="h-[36 px] w-full">
+              <button className="ml-2 text-[20px] text-[#E7E9EA] cursor-pointer hover:bg-stone-900 p-2 rounded-full mb-4 pl-2 pr-2 flex items-center"><ArrowIcon className="mr-6 fill-[#E7E9EA] w-6 h-6"/> Home</button>
+          </div>
+          <div className="flex"> {/* Post Author */}
             <img
-              className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
+              className="ml-7 mr-3 rounded-full w-[48px] h-[48px] cursor-pointer self-start"
               src={post.author.profile_image}
               alt="profile_picture"
             />
-            <div className="flex flex-col ml-3">
-              <div className="flex items-center">
-                <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
-                  {post.author.name}
+            <div className="flex flex-col">
+              <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
+                {post.author.name}
+              </h2>
+              <h2 className="pr-1 text-stone-500 text-[16px]">
+                @{post.author.username}
+              </h2>
+          </div>
+          <h4 className="text-stone-500 text-[16px]"> · {CalcTemp(post.created_at)}</h4>
+        </div>
+        
+        <div className="bg-black flex ml-7 mt-4" key={post.id}> {/* Post body */}
+            <h2 className="text-[#E7E9EA] text-[18px]">{post.post_body}</h2>
+          </div>
+
+        <div className="flex flex-col pr-7 pl-7">
+            {post.medias &&
+              post.medias.map((media) => (
+                <img
+                  className="w-full rounded-md block mt-4 mb-4 object-cover cursor-pointer"
+                  src={media.file}
+                  alt=""
+                  key={media.id}
+                />
+              ))}
+            <div className="flex justify-center gap-32 mt-4">
+              <div
+                className="flex items-center group cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedPost(post);
+                }}
+              >
+                <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
+                <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
+                  {post.comments.length}
                 </h2>
-                <h2 className="pr-1 text-stone-500 text-[16px]">
-                  @{post.author.username}
-                </h2>
-                <h4 className="text-stone-500 text-[16px]"> · {temp}</h4>
               </div>
 
-              <h2 className="text-[#E7E9EA] text-[18px]">{post.post_body}</h2>
-              {post.medias &&
-                post.medias.map((media) => (
-                  <img
-                    className="w-full rounded-md block mt-4 mb-4 max-w-[450px] object-cover cursor-pointer"
-                    src={media.file}
-                    alt=""
-                    key={media.id}
-                  />
-                ))}
-
-              <div className="flex justify-center gap-32 mt-4 pr-16">
-                <div
-                  className="flex items-center group cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedPost(post);
-                  }}
+              <div
+                className="flex items-center group cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  retweet(post.id);
+                }}
+              >
+                <RetweetIcon
+                  className={`w-6 h-6 transition-colors duration-300 ${
+                    isRetweeted
+                      ? "fill-green-500"
+                      : "fill-stone-500 group-hover:fill-green-500"
+                  }`}
+                />
+                <h2
+                  className={`ml-1 transition-colors duration-300 ${
+                    isRetweeted ? "text-green-500" : "text-stone-500"
+                  }`}
                 >
-                  <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
-                  <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
-                    {post.comments.length}
-                  </h2>
-                </div>
+                  {retweetNumber}
+                </h2>
+              </div>
 
-                <div
-                  className="flex items-center group cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    retweet(post.id);
-                  }}
+              <div
+                className="flex items-center group cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  like(post.id);
+                }}
+              >
+                <LikeIcon
+                  className={`w-6 h-6 transition-colors duration-300 ${
+                    isLiked
+                      ? "fill-red-600"
+                      : "fill-stone-500 group-hover:fill-red-600"
+                  }`}
+                />
+
+                <h2
+                  className={`ml-1 transition-colors duration-300 ${
+                    isLiked ? "text-red-600" : "text-stone-500"
+                  }`}
                 >
-                  <RetweetIcon
-                    className={`w-6 h-6 transition-colors duration-300 ${
-                      isRetweeted
-                        ? "fill-green-500"
-                        : "fill-stone-500 group-hover:fill-green-500"
-                    }`}
-                  />
-                  <h2
-                    className={`ml-1 transition-colors duration-300 ${
-                      isRetweeted ? "text-green-500" : "text-stone-500"
-                    }`}
-                  >
-                    {retweetNumber}
-                  </h2>
-                </div>
-
-                <div
-                  className="flex items-center group cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    like(post.id);
-                  }}
-                >
-                  <LikeIcon
-                    className={`w-6 h-6 transition-colors duration-300 ${
-                      isLiked
-                        ? "fill-red-600"
-                        : "fill-stone-500 group-hover:fill-red-600"
-                    }`}
-                  />
-
-                  <h2
-                    className={`ml-1 transition-colors duration-300 ${
-                      isLiked ? "text-red-600" : "text-stone-500"
-                    }`}
-                  >
-                    {likeNumber}
-                  </h2>
-                </div>
+                  {likeNumber}
+                </h2>
               </div>
             </div>
-          </div>
         </div>
-        {actualUser && accessToken && SelectedPost ? (
-          <CommentInPost
-            post={SelectedPost}
-            user={actualUser}
-            token={accessToken}
-          />
-        ) : (
-          false
-        )}
+      <div className="border-b border-stone-800 w-full mt-4"></div>
+      </div>
+      {actualUser && accessToken && SelectedPost ? (
+        <CommentInPost
+          post={SelectedPost}
+          user={actualUser}
+          token={accessToken}
+        />
+      ) : (
+        false
+      )}
         {/* right side */}
         <div className="w-[420px] px-4 sticky top-0 h-screen overflow-y-auto">
           <div className="top-0 pt-2">

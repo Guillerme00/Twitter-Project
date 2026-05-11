@@ -121,7 +121,7 @@ useEffect(() => {
 return (
   <>
     {loading ? (
-      false // ou um spinner
+      false
     ) : exist === "notfound" || post == null ? (
       <PageNotFound />
     ) : (
