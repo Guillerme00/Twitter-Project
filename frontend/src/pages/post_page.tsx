@@ -77,89 +77,56 @@ export function PostPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
-  //states
-  const [isliked, setLiked] = useState(false);
+  // States
+const [exist, setExist] = useState("untouched");
+const [post, setPost] = useState<PostType | null>(null);
+const [isLiked, setIsLiked] = useState(false);
+const [isRetweeted, setIsRetweeted] = useState(false);
+const [loading, setLoading] = useState(true);
 
-  //funcions
-  const isLiked = async () => {
+useEffect(() => {
+  const fetchPostData = async () => {
     try {
       let token = accessToken;
 
       if (!token) {
-        const res = await api.post(
-          "/token/refresh/",
-          {},
-          { withCredentials: true },
-        );
+        const res = await api.post("/token/refresh/", {}, { withCredentials: true });
         token = res.data.access;
         setAccessToken(res.data.access);
       }
-      const response = await api.get(`/posts/${id}/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const me = await api.get(`/users/me/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      for (const like_id of response.data.likes) {
-        if (me.data.id === like_id) {
-          setLiked(true);
-        }
-      }
+
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const [postRes, meRes] = await Promise.all([
+        api.get(`/posts/${id}/`, { headers }),
+        api.get(`/users/me/`, { headers }),
+      ]);
+
+      setPost(postRes.data);
+      setExist("found");
+      setIsLiked(postRes.data.likes.includes(meRes.data.id));
+      setIsRetweeted(postRes.data.retweets.some((rt: { author: number }) => rt.author === meRes.data.id));
     } catch (err) {
       console.log(err);
+      setExist("notfound");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // States
-  const [exist, setExist] = useState("untouched");
-  const [post, setPost] = useState<PostType | null>(null);
+  fetchPostData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
-  // useEffects
-  useEffect(() => {
-    const postExist = async () => {
-      try {
-        let token = accessToken;
-
-        if (!token) {
-          const res = await api.post(
-            "/token/refresh/",
-            {},
-            { withCredentials: true },
-          );
-          token = res.data.access;
-          setAccessToken(res.data.access);
-        }
-
-        const response = await api.get(`/posts/${id}/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setPost(response.data);
-        setExist("found");
-      } catch (err) {
-        console.log(err);
-        setExist("notfound");
-      }
-    };
-    postExist();
-    isLiked();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <>
-      {exist === "notfound" || post == null ? (
-        <PageNotFound />
-      ) : exist === "found" ? (
-        <PostPageComponent post={post} liked={isliked} />
-      ) : (
-        false
-      )}
-    </>
-  );
-}
+return (
+  <>
+    {loading ? (
+      false // ou um spinner
+    ) : exist === "notfound" || post == null ? (
+      <PageNotFound />
+    ) : (
+      <PostPageComponent post={post} liked={isLiked} retweeted={isRetweeted}/>
+    )}
+  </>
+  )
+};

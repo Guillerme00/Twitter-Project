@@ -115,6 +115,8 @@ export const PostPageComponent = ({
 
   const [actualUser, setActualUser] = useState<ActualUser | null>(null);
   const [isLiked, setIsLiked] = useState(liked);
+  const [likeNumber, setLikeNumber] = useState(post.likes.length)
+  const [retweetNumber, setRetweetNumber] = useState(post.retweets.length)
   const [isRetweeted, setIsRetweeted] = useState(retweeted);
 
   const like = async (id: number) => {
@@ -130,6 +132,7 @@ export const PostPageComponent = ({
         },
       );
       setIsLiked(!isLiked);
+      likeNumberCounter()
     } catch (err) {
       console.log(err);
     }
@@ -149,10 +152,35 @@ export const PostPageComponent = ({
         },
       );
       setIsRetweeted(!isRetweeted);
+      retweetNumberCounter()
     } catch (err) {
       console.log(err);
     }
   };
+
+  const likeNumberCounter = () => {
+    if (isLiked) {
+      return (
+        setLikeNumber((prev) => prev - 1)
+      )
+    } else {
+      return (
+        setLikeNumber((prev) => prev + 1)
+      )
+    }
+  }
+
+  const retweetNumberCounter = () => {
+    if (isRetweeted) {
+      return (
+        setRetweetNumber((prev) => prev - 1)
+      )
+    } else {
+      return (
+        setRetweetNumber((prev) => prev + 1)
+      )
+    }
+  }
 
   useEffect(() => {
     const handleInit = async () => {
@@ -275,7 +303,7 @@ export const PostPageComponent = ({
                       isRetweeted ? "text-green-500" : "text-stone-500"
                     }`}
                   >
-                    {post.retweets.length}
+                    {retweetNumber}
                   </h2>
                 </div>
 
@@ -299,7 +327,7 @@ export const PostPageComponent = ({
                       isLiked ? "text-red-600" : "text-stone-500"
                     }`}
                   >
-                    {post.likes.length}
+                    {likeNumber}
                   </h2>
                 </div>
               </div>
