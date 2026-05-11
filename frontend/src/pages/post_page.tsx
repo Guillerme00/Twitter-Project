@@ -1,7 +1,7 @@
 import axios from "axios";
 import { PageNotFound } from "../components/page_not_found";
-import { PostPageComponent } from "../components/post_page";
-import { useParams  } from "react-router-dom";
+import { PostPageComponent } from "../components/post_page_component";
+import { useParams } from "react-router-dom";
 import { useAuthStore } from "../store/AuthStore";
 import { useEffect, useState } from "react";
 
@@ -9,7 +9,6 @@ const api = axios.create({
   baseURL: "http://localhost:8000/api",
   withCredentials: true,
 });
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -40,52 +39,127 @@ api.interceptors.response.use(
   },
 );
 
-export function PostPage () {
-    // consts
-    const { id } = useParams();
-    const accessToken = useAuthStore((state) => state.accessToken)
-    const setAccessToken = useAuthStore((state) => state.setAccessToken)
+type PostType = {
+  author: {
+    bio: string;
+    birthday: string;
+    email: string;
+    followers_count: number;
+    following_count: number;
+    id: number;
+    name: string;
+    profile_banner: string;
+    profile_image: string;
+    username: string;
+  };
+  comments: [];
+  created_at: string;
+  id: number;
+  likes: number[];
+  likes_count: number;
+  medias: {
+    id: number;
+    file: string;
+    order: number;
+  }[];
+  post_body: string;
+  retweets: {
+    author: number;
+    created_at: string;
+    id: number;
+    post: number;
+  }[];
+};
 
-    // States
-    const [exist, setExist] = useState("untouched")
+export function PostPage() {
+  // consts
+  const { id } = useParams();
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
-    // useEffects
-    useEffect(() => {
-        const postExist = async () => {
-            try {
-                let token = accessToken;
+  //states
+  const [isliked, setLiked] = useState(false);
 
-            if (!token) {
-                const res = await api.post("/token/refresh/", {}, { withCredentials: true });
-                token = res.data.access;
-                setAccessToken(res.data.access);
-            }
+  //funcions
+  const isLiked = async () => {
+    try {
+      let token = accessToken;
 
-                await api.get(
-                `/posts/${id}/`,
-                {
-                    headers: {
-                    Authorization: `Bearer ${token}`,
-                        },
-                    }
-                )
-                setExist("found")
-            } catch (err) {
-                console.log(err)
-                setExist("notfound")
-            }
+      if (!token) {
+        const res = await api.post(
+          "/token/refresh/",
+          {},
+          { withCredentials: true },
+        );
+        token = res.data.access;
+        setAccessToken(res.data.access);
+      }
+      const response = await api.get(`/posts/${id}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const me = await api.get(`/users/me/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      for (const like_id of response.data.likes) {
+        if (me.data.id === like_id) {
+          setLiked(true);
         }
-        postExist()
-    }, [])
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-    return (
-        <>
-            {exist === "notfound" ?
-                <PageNotFound />
-                : exist === "found" ?
-                <PostPageComponent />
-                : false
-            }
-        </>
-    )
+  // States
+  const [exist, setExist] = useState("untouched");
+  const [post, setPost] = useState<PostType | null>(null);
+
+  // useEffects
+  useEffect(() => {
+    const postExist = async () => {
+      try {
+        let token = accessToken;
+
+        if (!token) {
+          const res = await api.post(
+            "/token/refresh/",
+            {},
+            { withCredentials: true },
+          );
+          token = res.data.access;
+          setAccessToken(res.data.access);
+        }
+
+        const response = await api.get(`/posts/${id}/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setPost(response.data);
+        setExist("found");
+      } catch (err) {
+        console.log(err);
+        setExist("notfound");
+      }
+    };
+    postExist();
+    isLiked();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <>
+      {exist === "notfound" || post == null ? (
+        <PageNotFound />
+      ) : exist === "found" ? (
+        <PostPageComponent post={post} liked={isliked} />
+      ) : (
+        false
+      )}
+    </>
+  );
 }

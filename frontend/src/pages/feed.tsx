@@ -96,11 +96,12 @@ api.interceptors.response.use(
 
 export function Feed() {
   //consts
-  const selectedPost = useSelectedPostStore((state) => state.selectedPost);
   const accessToken = useAuthStore((state) => state.accessToken);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const navigate = useNavigate();
-  const setSelectedPost = useSelectedPostStore((state) => state.setSelectedPost);
+  const setSelectedPost = useSelectedPostStore(
+    (state) => state.setSelectedPost,
+  );
   const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
 
   //states
@@ -132,39 +133,43 @@ export function Feed() {
 
   // UseEffects
   useEffect(() => {
-  const handleInit = async () => {
-    try {
-      let token = accessToken;
+    const handleInit = async () => {
+      try {
+        let token = accessToken;
 
-      if (!token) {
-        const res = await api.post("/token/refresh/", {}, { withCredentials: true });
-        token = res.data.access;
-        setAccessToken(res.data.access);
+        if (!token) {
+          const res = await api.post(
+            "/token/refresh/",
+            {},
+            { withCredentials: true },
+          );
+          token = res.data.access;
+          setAccessToken(res.data.access);
+        }
+
+        const response = await api.get("/posts/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPosts(response.data.results);
+
+        const actual_user_response = await api.get("/users/me/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setActualUser(actual_user_response.data);
+      } catch (err) {
+        console.log(err);
+        navigate("/signin");
       }
+    };
 
-      const response = await api.get("/posts/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setPosts(response.data.results);
-
-      const actual_user_response = await api.get("/users/me/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setActualUser(actual_user_response.data);
-    } catch (err) {
-      console.log(err);
-      navigate("/signin");
-    }
-  };
-
-  handleInit();
-}, [accessToken]);
+    handleInit();
+  }, [accessToken, navigate, setAccessToken]);
 
   useEffect(() => {
     if (SelectedPost === null) {
       document.body.style.overflow = "auto";
     }
-  }, [SelectedPost])
+  }, [SelectedPost]);
 
   //functions
   const handlePost = async () => {
@@ -275,12 +280,12 @@ export function Feed() {
       console.log(err);
     }
   };
-  
+
   // Body
   return (
     <div className="bg-black h-screen text-[#E7E9EA] flex justify-center overflow-hidden">
       <div className="flex w-full max-w-[1300px]">
-      {/* Left Side */}
+        {/* Left Side */}
         <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
           <div className="top-0 py-2 mr-8">
             <XIcon className="fill-[#E7E9EA] w-8 h-8 ml-3 mb-4 cursor-pointer" />
@@ -417,7 +422,7 @@ export function Feed() {
                     {post.medias &&
                       post.medias.map((media) => (
                         <img
-                          className="w-full rounded-md block mt-4 mb-4 max-w-[400px] object-cover cursor-pointer"
+                          className="w-full rounded-md block mt-4 mb-4 max-w-[450px] object-cover cursor-pointer"
                           src={media.file}
                           alt=""
                           key={media.id}
@@ -427,7 +432,11 @@ export function Feed() {
                     <div className="flex justify-center gap-32 mt-4 pr-16">
                       <div
                         className="flex items-center group cursor-pointer"
-                        onClick={(e) => {e.stopPropagation(); setSelectedPost(post)}}>
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPost(post);
+                        }}
+                      >
                         <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
                         <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
                           {post.comments.length}
@@ -436,7 +445,10 @@ export function Feed() {
 
                       <div
                         className="flex items-center group cursor-pointer"
-                        onClick={(e) => {e.stopPropagation(); retweet(post.id)}}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          retweet(post.id);
+                        }}
                       >
                         <RetweetIcon
                           className={`w-6 h-6 transition-colors duration-300 ${
@@ -456,7 +468,10 @@ export function Feed() {
 
                       <div
                         className="flex items-center group cursor-pointer"
-                        onClick={(e) => {e.stopPropagation(); like(post.id)}}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          like(post.id);
+                        }}
                       >
                         <LikeIcon
                           className={`w-6 h-6 transition-colors duration-300 ${
@@ -481,9 +496,9 @@ export function Feed() {
             },
           )}
         </div>
-        {actualUser && accessToken && selectedPost ? (
+        {actualUser && accessToken && SelectedPost ? (
           <CommentInPost
-            post={selectedPost}
+            post={SelectedPost}
             user={actualUser}
             token={accessToken}
           />
