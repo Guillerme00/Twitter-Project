@@ -3,7 +3,6 @@ from django.core.exceptions import ValidationError
 from posts.models import PostModel
 from users.factories.user_factory import UserFactory
 from posts.factories.post_factory import PostFactory
-from posts.models import CommentPostModel
 from rest_framework.test import APIClient
 
 def test_dont_allow_a_501_post(db):
