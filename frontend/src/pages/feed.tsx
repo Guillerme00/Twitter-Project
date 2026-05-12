@@ -289,9 +289,11 @@ export function Feed() {
         <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
           <div className="top-0 py-2 mr-8">
             <XIcon className="fill-[#E7E9EA] w-8 h-8 ml-3 mb-4 cursor-pointer" />
-            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
+            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+            onClick={() => navigate("/home")}
+            >
               <HomeIcon className="fill-[#E7E9EA] w-8 h-8" />
-              <h2 className="text-xl" onClick={() => navigate("/home")}>
+              <h2 className="text-xl">
                 Home
               </h2>
             </button>
@@ -404,7 +406,7 @@ export function Feed() {
                     src={post.author.profile_image}
                     alt="profile_picture"
                   />
-                  <div className="flex flex-col ml-3">
+                  <div className="flex flex-col ml-3 w-full">
                     <div className="flex items-center">
                       <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
                         {post.author.name}
@@ -431,7 +433,7 @@ export function Feed() {
                         />
                       ))}
 
-                    <div className="flex justify-center gap-32 mt-4 pr-16">
+                    <div className="flex justify-center gap-32 mt-4">
                       <div
                         className="flex items-center group cursor-pointer"
                         onClick={(e) => {

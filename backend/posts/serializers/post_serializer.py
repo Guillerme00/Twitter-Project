@@ -50,7 +50,6 @@ class PostSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You can't do a blank post")
         return value
     
-    
     def create(self, validated_data):
         files = validated_data.pop("files", [])
         validated_data.pop("likes", None)

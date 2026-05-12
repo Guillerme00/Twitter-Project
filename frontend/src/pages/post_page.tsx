@@ -127,7 +127,7 @@ export function PostPage() {
   }, []);
 
   return (
-    <>
+    <div className="bg-black h-screen">
       {loading ? (
         false
       ) : exist === "notfound" || post == null ? (
@@ -139,6 +139,6 @@ export function PostPage() {
           retweeted={isRetweeted}
         />
       )}
-    </>
+    </div>
   );
 }

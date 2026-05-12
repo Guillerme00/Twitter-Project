@@ -37,3 +37,22 @@ class PostViewSet(viewsets.ModelViewSet):
             return Response(
                 {"status": "liked"}
             )
+    
+    @action(detail=True, methods=["post"])
+    def comment(self, request, pk=None):
+        post_to_comment = self.get_object()
+        serializer = PostSerializer(data=request.data)
+
+        if serializer.is_valid():
+            comment = serializer.save(author=request.user, parent_post=post_to_comment)
+            return Response({"status": "commented", "id": comment.id}, status=201)
+        return Response(serializer.errors, status=400)
+    
+    @action(detail=True, methods=["delete"], url_path="delete_comment/(?P<comment_pk>[^/.]+)")
+    def delete_comment(self, request, pk=None, comment_pk=None):
+        try:
+            comment = PostModel.objects.get(pk=comment_pk, author=request.user)
+            comment.delete()
+            return Response({"status": "deleted"})
+        except PostModel.DoesNotExist:
+            return Response({"status": "not found"}, status=404)
