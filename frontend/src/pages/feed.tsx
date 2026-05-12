@@ -291,7 +291,9 @@ export function Feed() {
             <XIcon className="fill-[#E7E9EA] w-8 h-8 ml-3 mb-4 cursor-pointer" />
             <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
               <HomeIcon className="fill-[#E7E9EA] w-8 h-8" />
-              <h2 className="text-xl">Home</h2>
+              <h2 className="text-xl" onClick={() => navigate("/home")}>
+                Home
+              </h2>
             </button>
             <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
               <MeIcon className="fill-[#E7E9EA] w-8 h-8" />

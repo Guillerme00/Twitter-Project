@@ -2,10 +2,12 @@ import HomeIcon from "../assets/icons/home.svg?react";
 import MeIcon from "../assets/icons/me.svg?react";
 import SettingsIcon from "../assets/icons/settings.svg?react";
 import XIcon from "../assets/icons/x_logo.svg?react";
+import { useNavigate } from "react-router-dom";
 
 export const PageNotFound = () => {
-    return(
-        <div className="bg-black h-screen text-[#E7E9EA] flex justify-center overflow-hidden">
+  const navigate = useNavigate();
+  return (
+    <div className="bg-black h-screen text-[#E7E9EA] flex justify-center overflow-hidden">
       <div className="flex w-full max-w-[1300px]">
         {/* Left Side */}
         <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
@@ -13,7 +15,9 @@ export const PageNotFound = () => {
             <XIcon className="fill-[#E7E9EA] w-8 h-8 ml-3 mb-4 cursor-pointer" />
             <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
               <HomeIcon className="fill-[#E7E9EA] w-8 h-8" />
-              <h2 className="text-xl">Home</h2>
+              <h2 className="text-xl" onClick={() => navigate("/home")}>
+                Home
+              </h2>
             </button>
             <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
               <MeIcon className="fill-[#E7E9EA] w-8 h-8" />
@@ -27,10 +31,10 @@ export const PageNotFound = () => {
         </div>
 
         {/* mid side */}
-            <div className="flex flex-col items-center bg-black min-h-screen text-[#E7E9EA] justify-center">
-                <img src="https://http.cat/images/404.jpg" alt="" />
-                <h1 className="font-bold text-[24px]">Erro, Post not found.</h1>
-            </div>
+        <div className="flex flex-col items-center bg-black min-h-screen text-[#E7E9EA] justify-center">
+          <img src="https://http.cat/images/404.jpg" alt="" />
+          <h1 className="font-bold text-[24px]">Erro, Post not found.</h1>
+        </div>
         {/* right side */}
         <div className="px-2 border-l border-stone-800 w-[420px] px-4 sticky top-0 h-screen overflow-y-auto">
           <div className="top-0 pt-2">
@@ -49,5 +53,5 @@ export const PageNotFound = () => {
         </div>
       </div>
     </div>
-    )
-}
+  );
+};
