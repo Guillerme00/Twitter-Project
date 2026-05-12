@@ -6,12 +6,12 @@ class PostModel(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
-    created_at = models.DateField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(UserModel, related_name="posts", on_delete=models.CASCADE)
     post_body = models.CharField(
         blank=False,
         null=False,
-        max_length=1200
+        max_length=500
     )
     likes = models.ManyToManyField(
         UserModel,

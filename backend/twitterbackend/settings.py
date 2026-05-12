@@ -47,6 +47,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -128,7 +129,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR.parent / 'media'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 AUTH_USER_MODEL = 'users.UserModel'
 
@@ -149,3 +150,5 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+
+CORS_ALLOW_CREDENTIALS = True

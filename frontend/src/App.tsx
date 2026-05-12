@@ -4,6 +4,7 @@ import { RegisterPage } from "./pages/register_page";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./store/AuthStore";
 import { Feed } from "./pages/feed";
+import { PostPage } from "./pages/post_page";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = useAuthStore((state) => state.accessToken);
@@ -21,14 +22,21 @@ function App() {
         <Route path="/signup" element={<RegisterPage />} />
         <Route path="/signin" element={<LoginPage />} />
         <Route
-          path="/homeProtect"
+          path="/home"
           element={
             <PrivateRoute>
               <Feed />
             </PrivateRoute>
           }
         />
-        <Route path="/home" element={<Feed />} />
+        <Route
+          path="/post/:id"
+          element={
+            <PrivateRoute>
+              <PostPage />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

@@ -64,6 +64,9 @@ export function Login() {
     const response = await axios.post<TokenResponse>(
       "http://localhost:8000/api/token/",
       UserData,
+      {
+        withCredentials: true
+      }
     );
     return response;
   };

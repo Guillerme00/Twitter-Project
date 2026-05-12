@@ -1,6 +1,6 @@
 import { useState } from "react";
 import XIcon from "../assets/icons/x_logo.svg?react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 
 export function Register() {
@@ -170,9 +170,14 @@ export function Register() {
     }
     const birthday = `${year}-${months.indexOf(month) + 1}-${day}`;
     const UserDate = { name, email, username, password: pass1, birthday };
-    await post_register(UserDate);
-    setInError("ok");
-    redirecting();
+    try {
+      await post_register(UserDate);
+      setInError("ok");
+      redirecting();
+    } catch (error) {
+      const err = error as AxiosError;
+      console.log(err.response?.data);
+    }
   };
 
   const sleep = (): Promise<void> => {

@@ -6,8 +6,8 @@ from posts.factories.post_factory import PostFactory
 from posts.models import CommentPostModel
 from rest_framework.test import APIClient
 
-def test_dont_allow_a_1200_post(db):
-    long_post = "o" * 1201
+def test_dont_allow_a_501_post(db):
+    long_post = "o" * 501
     post = PostFactory.build(post_body=long_post)
 
     with pytest.raises(ValidationError):

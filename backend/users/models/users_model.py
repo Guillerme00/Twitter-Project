@@ -20,15 +20,15 @@ class UserModel(AbstractUser):
     profile_image = models.ImageField(
         blank=True,
         null=True,
-        default='default_images/profile.jpg',
+        default='default_profile_images/profile.jpg',
         upload_to='profiles_images/',
     )
 
     profile_banner = models.ImageField(
         blank=True,
         null=True,
-        default='default_images/banner.png',
-        upload_to='profiles_banners/',
+        default='default_profile_images/banner.png',
+        upload_to='profile_banners/',
     )
 
     bio = models.TextField(

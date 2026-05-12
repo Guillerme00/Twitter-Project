@@ -1,13 +1,13 @@
 from rest_framework.routers import DefaultRouter
-from users.views import UserViewSet
+from users.views import UserViewSet, CustomTokenObtainPairView, CustomTokenRefreshView
+from django.urls import path
 
 router = DefaultRouter()
 
 router.register(r'users', UserViewSet)
 
 urlpatterns = [
-    #viewset
     *router.urls,
-
-    #login
+    path("token/", CustomTokenObtainPairView.as_view()),
+    path("token/refresh/", CustomTokenRefreshView.as_view()),
 ]
