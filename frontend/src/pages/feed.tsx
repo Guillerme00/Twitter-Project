@@ -45,6 +45,7 @@ type PostProps = {
   id: number;
   likes: number[];
   likes_count: number;
+  parent_post: number|null;
   medias: {
     id: number;
     file: string;
@@ -114,7 +115,12 @@ export function Feed() {
   //functions
   const validPost = postMessage.length >= 1 && postMessage.length <= 500;
 
-  function CalcTemp(created_at: string) {
+  const clearPostImage = () => {
+    setImage(null)
+    setPreview(null)
+  }
+
+  const CalcTemp = (created_at: string) => {
     const now = new Date();
     const postDate = new Date(created_at);
     const time = now.getTime() - postDate.getTime();
@@ -361,6 +367,12 @@ export function Feed() {
               </div>
               {preview && (
                 <>
+                  <div className="relative">
+                    <button
+                    className=" cursor-pointer absolute bg-black/50 p-1 top-2 right-2 rounded-full w-8 h-8 font-[E7E9EA] flex items-center justify-center"
+                    onClick={() => clearPostImage()}
+                    >X</button>
+                  </div>
                   <img
                     src={preview}
                     alt="preview"
@@ -395,6 +407,8 @@ export function Feed() {
               const isRetweeted = actualUser
                 ? post.retweets.some((rt) => rt.author === actualUser.id)
                 : false;
+              
+              if (post.parent_post === null) {
               return (
                 <div
                   className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer"
@@ -497,8 +511,9 @@ export function Feed() {
                   </div>
                 </div>
               );
-            },
+            }},
           )}
+          
         </div>
         {actualUser && accessToken && SelectedPost ? (
           <CommentInPost

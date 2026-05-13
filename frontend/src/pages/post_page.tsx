@@ -57,6 +57,7 @@ type PostType = {
   id: number;
   likes: number[];
   likes_count: number;
+  parent_post: number|null;
   medias: {
     id: number;
     file: string;
@@ -87,6 +88,8 @@ export function PostPage() {
   useEffect(() => {
     const fetchPostData = async () => {
       try {
+        setLoading(true)
+
         let token = accessToken;
 
         if (!token) {
@@ -124,7 +127,7 @@ export function PostPage() {
 
     fetchPostData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [id]);
 
   return (
     <div className="bg-black h-screen">

@@ -12,6 +12,7 @@ import ArrowIcon from "../assets/icons/arrow.svg?react";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/AuthStore";
 import { useNavigate } from "react-router-dom";
+import { useParams } from 'react-router-dom';
 
 import { CommentInPost } from "./comment";
 import { useSelectedPostStore } from "../store/SelectedPostStore";
@@ -40,6 +41,7 @@ type PostType = {
     id: number;
     likes: number[];
     likes_count: number;
+    parent_post: number|null;
     medias: {
       id: number;
       file: string;
@@ -102,6 +104,7 @@ api.interceptors.response.use(
 );
 
 export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
+  let { id } = useParams()
   const accessToken = useAuthStore((state) => state.accessToken);
   const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
@@ -112,9 +115,13 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
 
   const [actualUser, setActualUser] = useState<ActualUser | null>(null);
   const [isLiked, setIsLiked] = useState(liked);
+  const [isRetweeted, setIsRetweeted] = useState(retweeted);
+
+  const [postComments, setPostComments] = useState<PostType["comments"]>(post.comments);
+
   const [likeNumber, setLikeNumber] = useState(post.likes.length);
   const [retweetNumber, setRetweetNumber] = useState(post.retweets.length);
-  const [isRetweeted, setIsRetweeted] = useState(retweeted);
+
   const [postComment, setpostComment] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -211,8 +218,8 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
         const actual_user_response = await api.get("/users/me/", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("POST DATA:", JSON.stringify(post, null, 2));
         setActualUser(actual_user_response.data);
+        console.log(post)
       } catch (err) {
         console.log(err);
         navigate("/signin");
@@ -222,25 +229,37 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
   }, [accessToken, navigate, setAccessToken]);
 
   const handlePostComment = () => {
-    const formData = new FormData();
-    if (image) {
-      formData.append("post_body", postComment);
-      formData.append("files", image);
-    } else {
-      formData.append("post_body", postComment);
+    const handlePostCommentFunc = async () => {
+      const formData = new FormData();
+      if (image) {
+        formData.append("post_body", postComment);
+        formData.append("files", image);
+      } else {
+        formData.append("post_body", postComment);
+      }
+      try {
+        await api.post(`/posts/${post.id}/comment/`, formData, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const response = await api.get(`/posts/${id}`,
+          {
+            headers: {
+            Authorization: `Bearer ${accessToken}`,
+            }
+          }
+        )
+
+        setPostComments(response.data.comments)
+        setpostComment("");
+        setSelectedPost(null);
+        navigate(`/post/${post.id}`);
+      } catch (err) {
+        console.log(err);
+      }
     }
-    try {
-      api.post(`/posts/${post.id}/comment/`, formData, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      setpostComment("");
-      setSelectedPost(null);
-      navigate(`/post/${post.id}`);
-    } catch (err) {
-      console.log(err);
-    }
+  handlePostCommentFunc()
   };
 
   useEffect(() => {
@@ -256,9 +275,9 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
         <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
           <div className="top-0 py-2 mr-8">
             <XIcon className="fill-[#E7E9EA] w-8 h-8 ml-3 mb-4 cursor-pointer" />
-            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
+            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300" onClick={() => navigate("/home")}>
               <HomeIcon className="fill-[#E7E9EA] w-8 h-8" />
-              <h2 className="text-xl" onClick={() => navigate("/home")}>
+              <h2 className="text-xl">
                 Home
               </h2>
             </button>
@@ -459,7 +478,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
 
           </div>
           <div className="w-full mt-4 border-b border-stone-800"></div>
-          {post.comments.map(
+          {postComments.map(
             (
               post_comment, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => {
@@ -540,7 +559,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
                             isRetweeted ? "text-green-500" : "text-stone-500"
                           }`}
                         >
-                          {post_comment.retweets?.length ?? 0}
+                          {post_comment.retweets.length}
                         </h2>
                       </div>
 

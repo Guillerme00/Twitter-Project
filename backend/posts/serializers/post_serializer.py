@@ -10,6 +10,11 @@ class CommentSerializer(serializers.ModelSerializer):
     medias = PostFilesSerializer(many=True, read_only=True)
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
+    retweets= RetweetSerializer(many=True, read_only=True)
+
+    def get_retweets(self, obj):
+        return obj.retweets
+    
 
     def get_likes_count(self, obj):
         return obj.likes.count()
@@ -19,13 +24,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PostModel
-        fields = ["id", "author", "post_body", "medias", "likes", "likes_count","comments_count","created_at"]
+        fields = ["id", "author", "post_body","parent_post", "medias", "likes", "retweets", "likes_count","comments_count","created_at"]
         read_only_fields = ["created_at", "author"]
 
 class PostSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
-    retweets_count = serializers.SerializerMethodField()
-    comments_count = serializers.SerializerMethodField()
     author = UserSerializer(read_only=True)
     retweets = RetweetSerializer(many=True, read_only=True)
     medias = PostFilesSerializer(many=True, read_only=True)
