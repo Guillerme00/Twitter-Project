@@ -13,7 +13,7 @@ type PostProps = {
     profile_image: string;
     username: string;
   };
-  comments: [];
+  comments: PostProps[];
   created_at: string;
   id: number;
   likes: number[];

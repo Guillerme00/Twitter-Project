@@ -19,7 +19,10 @@ import { useSelectedPostStore } from "../store/SelectedPostStore";
 type commentProps = {
   liked: boolean;
   retweeted: boolean;
-  post: {
+  post: PostType;
+};
+
+type PostType = {
     author: {
       bio: string;
       birthday: string;
@@ -32,7 +35,7 @@ type commentProps = {
       profile_image: string;
       username: string;
     };
-    comments: [];
+    comments: PostType[];
     created_at: string;
     id: number;
     likes: number[];
@@ -50,7 +53,6 @@ type commentProps = {
       post: number;
     }[];
   };
-};
 type ActualUser = {
   id: number;
   name: string;
@@ -101,9 +103,9 @@ api.interceptors.response.use(
 
 export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const navigate = useNavigate();
-  const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
   const setSelectedPost = useSelectedPostStore(
     (state) => state.setSelectedPost,
   );
@@ -113,6 +115,12 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
   const [likeNumber, setLikeNumber] = useState(post.likes.length);
   const [retweetNumber, setRetweetNumber] = useState(post.retweets.length);
   const [isRetweeted, setIsRetweeted] = useState(retweeted);
+  const [postComment, setpostComment] = useState("");
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
+
+  const validPost = postComment.length >= 1 && postComment.length <= 500;
 
   const like = async (id: number) => {
     if (!actualUser) return;
@@ -203,15 +211,37 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
         const actual_user_response = await api.get("/users/me/", {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("POST DATA:", JSON.stringify(post, null, 2));
         setActualUser(actual_user_response.data);
       } catch (err) {
         console.log(err);
         navigate("/signin");
       }
     };
-
     handleInit();
   }, [accessToken, navigate, setAccessToken]);
+
+  const handlePostComment = () => {
+    const formData = new FormData();
+    if (image) {
+      formData.append("post_body", postComment);
+      formData.append("files", image);
+    } else {
+      formData.append("post_body", postComment);
+    }
+    try {
+      api.post(`/posts/${post.id}/comment/`, formData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      setpostComment("");
+      setSelectedPost(null);
+      navigate(`/post/${post.id}`);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
     if (SelectedPost === null) {
@@ -274,13 +304,21 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
               · {CalcTemp(post.created_at)}
             </h4>
           </div>
-
+          
           <div className="bg-black flex ml-7 mt-4" key={post.id}>
-            {" "}
-            {/* Post body */}
             <h2 className="text-[#E7E9EA] text-[18px]">{post.post_body}</h2>
           </div>
 
+            {actualUser && accessToken && SelectedPost ? (
+            <CommentInPost
+              post={SelectedPost}
+              user={actualUser}
+              token={accessToken}
+            />
+            ) : (
+              false
+            )}
+            
           <div className="flex flex-col pr-7 pl-7">
             {post.medias &&
               post.medias.map((media) => (
@@ -291,9 +329,10 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
                   key={media.id}
                 />
               ))}
-            <div className="flex justify-center gap-32 mt-4">
+            
+            <div className="flex justify-center gap-32 mt-4 border-b border-stone-800">
               <div
-                className="flex items-center group cursor-pointer"
+                className="flex items-center group cursor-pointer mb-4"
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedPost(post);
@@ -306,7 +345,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
               </div>
 
               <div
-                className="flex items-center group cursor-pointer"
+                className="flex items-center group cursor-pointer mb-4"
                 onClick={(e) => {
                   e.stopPropagation();
                   retweet(post.id);
@@ -329,7 +368,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
               </div>
 
               <div
-                className="flex items-center group cursor-pointer"
+                className="flex items-center group cursor-pointer mb-4"
                 onClick={(e) => {
                   e.stopPropagation();
                   like(post.id);
@@ -352,18 +391,190 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
                 </h2>
               </div>
             </div>
+            <div>
+                <div className="flex flex-col p-4 border-b border-stone-800">
+                  <div className="flex flex-col">
+                    <div>
+                      <div className="flex">
+                        <img
+                          src={actualUser?.profile_image}
+                          alt="profile_picture"
+                          className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
+                        />
+                        <textarea
+                          placeholder="Post your reply"
+                          className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none"
+                          onChange={(s) => {
+                            setpostComment(s.target.value);
+                            s.target.style.height = "auto";
+                            s.target.style.height = s.target.scrollHeight + "px";
+                          }}
+                          onPaste={(e) => {
+                            const items = e.clipboardData.items;
+
+                            for (let i = 0; i < items.length; i++) {
+                              const item = items[i];
+
+                              if (item.type.startsWith("image")) {
+                                const file = item.getAsFile();
+
+                                if (file) {
+                                  setImage(file);
+
+                                  const url = URL.createObjectURL(file);
+                                  setPreview(url);
+                                }
+                              }
+                            }
+                          }}
+                          value={postComment}
+                        />
+                      </div>
+                    </div>
+                    {preview && (
+                      <>
+                        <img src={preview} alt="preview" className="mt-2 rounded-xl " />
+                        <div className="border-b border-stone-800 pb-4" />
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-end mt-4">
+                <button
+                  className={`hover:bg-stone-300 w-24 h-8 p-1 pr-2 pl-2 text-bold flex items-center justify-center rounded-full font-bold cursor-pointer text-[16px] bg-[#E7E9EA] text-stone-900 transition-colors duration-300
+                ${
+                  validPost
+                    ? "bg-[#E7E9EA] text-black hover:bg-[#cfcfcf] cursor-pointer"
+                    : "bg-stone-700 text-black opacity-50 cursor-not-allowed"
+                }
+                `}
+                  onClick={handlePostComment}
+                >
+                  Reply
+                </button>{" "}
+                {/*reply button */}
+              </div>
+            </div>
+
+
           </div>
-          <div className="border-b border-stone-800 w-full mt-4"></div>
+          <div className="w-full mt-4 border-b border-stone-800"></div>
+          {post.comments.map(
+            (
+              post_comment, // HERE HERE HERE HERE HERE HERE HERE HERE
+            ) => {
+              const isLiked = actualUser
+                ? (post_comment.likes ?? []).includes(actualUser.id)
+                : false;
+              const isRetweeted = actualUser
+                ? (post_comment.retweets ?? []).some((rt) => rt.author === actualUser.id)
+                : false;
+              return (
+                <div
+                  className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer"
+                  key={post_comment.id}
+                  onClick={() => navigate(`/post/${post_comment.id}`)}
+                >
+                  <img
+                    className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
+                    src={post_comment.author.profile_image}
+                    alt="profile_picture"
+                  />
+                  <div className="flex flex-col ml-3 w-full">
+                    <div className="flex items-center">
+                      <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
+                        {post_comment.author.name}
+                      </h2>
+                      <h2 className="pr-1 text-stone-500 text-[16px]">
+                        @{post_comment.author.username}
+                      </h2>
+                      <h4 className="text-stone-500 text-[16px]">
+                        {" "}
+                        · {CalcTemp(post_comment.created_at)}
+                      </h4>
+                    </div>
+
+                    <h2 className="text-[#E7E9EA] text-[18px]">
+                      {post_comment.post_body}
+                    </h2>
+                    {post_comment.medias &&
+                      post_comment.medias.map((media) => (
+                        <img
+                          className="w-full rounded-md block mt-4 mb-4 max-w-[450px] object-cover cursor-pointer"
+                          src={media.file}
+                          alt=""
+                          key={media.id}
+                        />
+                      ))}
+
+                    <div className="flex justify-center gap-32 mt-4">
+                      <div
+                        className="flex items-center group cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPost(post_comment);
+                        }}
+                      >
+                        <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
+                        <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
+                          {post_comment.comments?.length ?? 0}
+                        </h2>
+                      </div>
+
+                      <div
+                        className="flex items-center group cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          retweet(post_comment.id);
+                        }}
+                      >
+                        <RetweetIcon
+                          className={`w-6 h-6 transition-colors duration-300 ${
+                            isRetweeted
+                              ? "fill-green-500"
+                              : "fill-stone-500 group-hover:fill-green-500"
+                          }`}
+                        />
+                        <h2
+                          className={`ml-1 transition-colors duration-300 ${
+                            isRetweeted ? "text-green-500" : "text-stone-500"
+                          }`}
+                        >
+                          {post_comment.retweets?.length ?? 0}
+                        </h2>
+                      </div>
+
+                      <div
+                        className="flex items-center group cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          like(post_comment.id);
+                        }}
+                      >
+                        <LikeIcon
+                          className={`w-6 h-6 transition-colors duration-300 ${
+                            isLiked
+                              ? "fill-red-600"
+                              : "fill-stone-500 group-hover:fill-red-600"
+                          }`}
+                        />
+
+                        <h2
+                          className={`ml-1 transition-colors duration-300 ${
+                            isLiked ? "text-red-600" : "text-stone-500"
+                          }`}
+                        >
+                          {post_comment.likes?.length ?? 0}
+                        </h2>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            },
+          )}
         </div>
-        {actualUser && accessToken && SelectedPost ? (
-          <CommentInPost
-            post={SelectedPost}
-            user={actualUser}
-            token={accessToken}
-          />
-        ) : (
-          false
-        )}
+        
         {/* right side */}
         <div className="w-[420px] px-4 sticky top-0 h-screen overflow-y-auto">
           <div className="top-0 pt-2">

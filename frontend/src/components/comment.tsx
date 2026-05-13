@@ -23,7 +23,7 @@ type PostProps = {
     profile_image: string;
     username: string;
   };
-  comments: [];
+  comments: PostProps[];
   created_at: string;
   id: number;
   likes: number[];
@@ -142,7 +142,7 @@ export function CommentInPost({ post, user, token }: Props) {
       });
       setpostComment("");
       setSelectedPost(null);
-      navigate(`/api/posts/${post.id}`);
+      navigate(`/post/${post.id}`);
     } catch (err) {
       console.log(err);
     }
