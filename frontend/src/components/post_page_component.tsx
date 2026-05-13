@@ -245,7 +245,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
 
         {/* mid side */}
         <div className="border-r border-stone-800 flex-1 max-w-[700px] overflow-y-auto no-scrollbar flex flex-col">
-          <div className="h-[36 px] w-full">
+          <div className="h-[36 px] w-full mt-2">
             <button
               className="ml-2 text-[20px] text-[#E7E9EA] cursor-pointer hover:bg-stone-900 p-2 rounded-full mb-4 pl-2 pr-2 flex items-center"
               onClick={() => navigate("/home")}
