@@ -111,6 +111,7 @@ export function Feed() {
   const [Posts, setPosts] = useState<PostProps[]>([]);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [openedPostMenu, setOpenedPostMenu] = useState<number | null>(null);
 
   //functions
   const validPost = postMessage.length >= 1 && postMessage.length <= 500;
@@ -118,6 +119,30 @@ export function Feed() {
   const clearPostImage = () => {
     setImage(null)
     setPreview(null)
+  }
+
+  const openClosePostMenu = (id: number) => {
+    if (openedPostMenu !== null && openedPostMenu === id) {
+      setOpenedPostMenu(null)
+    } else if (openedPostMenu !== null || openedPostMenu !== id) {
+      setOpenedPostMenu(id)
+    }
+  }
+
+  const deletePost = async (id: number) => {
+    setPosts((prevPosts) =>
+      prevPosts.filter((post) => post.id !== id)
+    )
+    try {
+      await api.delete(`/posts/${id}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+    } catch (err) {
+      console.log(err)
+    }
+
   }
 
   const CalcTemp = (created_at: string) => {
@@ -411,10 +436,33 @@ export function Feed() {
               if (post.parent_post === null) {
               return (
                 <div
-                  className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer"
+                  className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
                   key={post.id}
                   onClick={() => navigate(`/post/${post.id}`)}
                 >
+                  {actualUser?.id === post.author.id && (
+                  <button 
+                  className="font-white absolute h-8 w-8 flex items-center justify-center top-3 right-3 cursor-pointer hover:bg-stone-700 p-2 rounded-full transition-colors duration-300"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openClosePostMenu(post.id)
+                  }}
+                  >
+                    •••
+                  </button>
+                  )}
+                  {openedPostMenu === post.id && (
+                  <div 
+                   className="absolute top-12 right-3 w-56 bg-black border border-stone-800 rounded-2xl shadow-xl z-50 transition-colors duration-300"
+                  >
+                    <h1 className="text-red-500 font-bold ml-4"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deletePost(post.id)
+                    }}
+                    >Delete post</h1>
+                  </div>
+                  )}
                   <img
                     className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
                     src={post.author.profile_image}
