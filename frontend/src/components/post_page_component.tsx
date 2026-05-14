@@ -186,6 +186,10 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
     }
   };
 
+  const handleDeleteComment = (id: number) => {
+  setPostComments(prev => prev.filter(c => c.id !== id))
+  }
+
   const CalcTemp = (created_at: string) => {
     const now = new Date();
     const postDate = new Date(created_at);
@@ -221,7 +225,6 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setActualUser(actual_user_response.data);
-        console.log(post);
       } catch (err) {
         console.log(err);
         navigate("/signin");
@@ -485,7 +488,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
             (
               post_comment, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => (
-              <CommentCard post={post_comment} key={post_comment.id} />
+              <CommentCard post={post_comment} onDelete={handleDeleteComment} key={post_comment.id} />
             ),
           )}
         </div>

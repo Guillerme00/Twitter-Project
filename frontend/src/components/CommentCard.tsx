@@ -12,6 +12,7 @@ import { useSelectedPostStore } from "../store/SelectedPostStore";
 
 type commentProps = {
   post: PostType;
+  onDelete: (id: number) => void;
 };
 
 type PostType = {
@@ -94,7 +95,7 @@ api.interceptors.response.use(
   },
 );
 
-export const CommentCard = ({ post }: commentProps) => {
+export const CommentCard = ({ post, onDelete }: commentProps) => {
   const accessToken = useAuthStore((state) => state.accessToken);
   const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
@@ -107,6 +108,7 @@ export const CommentCard = ({ post }: commentProps) => {
 
   const [likeNumber, setLikeNumber] = useState(post.likes.length);
   const [retweetNumber, setRetweetNumber] = useState(post.retweets.length);
+  const [openedPostMenu, setOpenedPostMenu] = useState<number | null>(null);
 
   const [isLiked, setIsLiked] = useState(
     post.likes.includes(actualUser?.id ?? -1),
@@ -149,6 +151,25 @@ export const CommentCard = ({ post }: commentProps) => {
       );
       setIsRetweeted(!isRetweeted);
       retweetNumberCounter();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const openClosePostMenu = (id: number) => {
+    if (openedPostMenu !== null && openedPostMenu === id) {
+      setOpenedPostMenu(null);
+    } else if (openedPostMenu !== null || openedPostMenu !== id) {
+      setOpenedPostMenu(id);
+    }
+  };
+
+  const deletePost = async (id: number) => {
+    try {
+      await api.delete(`/posts/${id}/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    onDelete(id)
     } catch (err) {
       console.log(err);
     }
@@ -227,10 +248,34 @@ export const CommentCard = ({ post }: commentProps) => {
   }, [SelectedPost]);
   return (
     <div
-      className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer"
+      className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
       key={post.id}
       onClick={() => navigate(`/post/${post.id}`)}
     >
+      {actualUser?.id === post.author.id && (
+        <button
+          className="font-white absolute h-8 w-8 flex items-center justify-center top-3 right-3 cursor-pointer hover:bg-stone-700 p-2 rounded-full transition-colors duration-300"
+          onClick={(e) => {
+            e.stopPropagation();
+            openClosePostMenu(post.id);
+          }}
+        >
+          •••
+        </button>
+      )}
+      {openedPostMenu === post.id && (
+        <div className="absolute top-12 right-3 w-56 bg-black border border-stone-800 rounded-2xl shadow-xl z-50 transition-colors duration-300">
+          <h1
+            className="text-red-500 font-bold ml-4"
+            onClick={(e) => {
+              e.stopPropagation();
+              deletePost(post.id);
+            }}
+          >
+            Delete post
+          </h1>
+        </div>
+      )}
       <img
         className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
         src={post.author.profile_image}
