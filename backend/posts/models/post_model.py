@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import UserModel
+from django.core.exceptions import ValidationError
 
 class PostModel(models.Model):
 
@@ -9,8 +10,8 @@ class PostModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(UserModel, related_name="posts", on_delete=models.CASCADE)
     post_body = models.CharField(
-        blank=False,
-        null=False,
+        default='',
+        blank=True,
         max_length=500
     )
     likes = models.ManyToManyField(
@@ -25,6 +26,24 @@ class PostModel(models.Model):
         null=True,
         blank=True
     )
+    retweet_post = models.ForeignKey(
+        'self',
+        related_name="retweets",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+
+    def clean(self):
+        if self.parent_post and self.retweet_post:
+            raise ValidationError(
+                "Post cannot be comment and retweet simultaneously."
+            )
+
+        if self.retweet_post and self.retweet_post.retweet_post:
+            raise ValidationError(
+                "Cannot retweet a retweet."
+            )
 
 class PostFilesModel(models.Model):
     post = models.ForeignKey(PostModel, related_name="medias", on_delete=models.CASCADE)

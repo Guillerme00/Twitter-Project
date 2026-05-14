@@ -309,8 +309,8 @@ export function Feed() {
 
   // Body
   return (
-    <div className="bg-black h-screen text-[#E7E9EA] flex justify-center overflow-hidden">
-      <div className="flex w-full max-w-[1300px]">
+    <div className="bg-black h-screen text-[#E7E9EA] flex justify-center">
+      <div className="flex w-full max-w-[1300px] overflow-hidden">
         {/* Left Side */}
         <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
           <div className="top-0 py-2 mr-8">
@@ -334,7 +334,7 @@ export function Feed() {
         </div>
 
         {/* mid side */}
-        <div className="border-r border-stone-800 flex-1 w-full max-w-[800px] overflow-y-auto no-scrollbar">
+        <div className="border-r border-stone-800 flex-1 w-full max-w-[800px] overflow-y-auto no-scrollbar h-screen">
           <div className="grid grid-cols-2 border-b border-stone-800">
             <div className="p-4 cursor-pointer font-bold text-center hover:bg-stone-900">
               <div className="inline-block">
