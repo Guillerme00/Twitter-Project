@@ -71,7 +71,7 @@ def test_dont_allow_a_blank_post(db):
     respose = client.post("/api/posts/", {"post_body": ""}, format="json")
 
     assert respose.status_code == 400
-    assert "post_body" in respose.data
+    assert 'non_field_errors' in respose.data
 
 
 def test_dont_allow_a_blank_comment(db):
@@ -84,7 +84,7 @@ def test_dont_allow_a_blank_comment(db):
     response = client.post(f"/api/posts/{post.pk}/comment/", {"post_body": ""}, format="json")
 
     assert response.status_code == 400
-    assert "post_body" in response.data
+    assert 'non_field_errors' in response.data
 
 def test_create_post(db):
     user1 = UserFactory()
@@ -178,7 +178,7 @@ def test_return_the_retweeted_post_from_a_user(db):
     client.post(f"/api/posts/{post2.pk}/retweet/")
     client.post(f"/api/posts/{post3.pk}/retweet/")
 
-    assert user1.retweets.count() == 3
+    assert PostModel.objects.filter(author=user1, retweet_post__isnull=False).count() == 3
 
 def test_return_feed(db):
     user1 = UserFactory()

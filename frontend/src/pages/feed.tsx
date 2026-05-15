@@ -425,10 +425,11 @@ export function Feed() {
               const isLiked = actualUser
                 ? post.likes.includes(actualUser.id)
                 : false;
-              const isRetweeted = actualUser
-                ? post.retweets.some((rt) => rt.author === actualUser.id)
-                : false;
-
+              // const isRetweeted = actualUser
+              //   ? post.retweets.some((rt) => rt.author === actualUser.id)
+              //   : false;
+              const isRetweeted = true
+              
               if (post.parent_post === null) {
                 return (
                   <div
@@ -525,7 +526,8 @@ export function Feed() {
                               isRetweeted ? "text-green-500" : "text-stone-500"
                             }`}
                           >
-                            {post.retweets.length}
+                            {/* {post.retweets.length} */}
+                            {0}
                           </h2>
                         </div>
 

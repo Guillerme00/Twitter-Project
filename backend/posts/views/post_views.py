@@ -56,3 +56,25 @@ class PostViewSet(viewsets.ModelViewSet):
             return Response({"status": "deleted"})
         except PostModel.DoesNotExist:
             return Response({"status": "not found"}, status=404)
+
+    @action(detail=True, methods=["post"])
+    def retweet(self, request, pk=None):
+        try:
+            retweeted_post = self.get_object()
+            existing_retweet = PostModel.objects.filter(
+                author=request.user,
+                retweet_post=retweeted_post
+            ).first()
+
+            if existing_retweet:
+                existing_retweet.delete()
+                return Response({"status": "unretweet"})
+            else:
+                PostModel.objects.create(
+                    author=request.user,
+                    retweet_post=retweeted_post
+                )
+                return Response({"status": "retweeted"}, status=201)
+        except:
+            return Response({"Error": "Retweet is not valid"}, status=404)
+            
