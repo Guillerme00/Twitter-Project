@@ -18,44 +18,14 @@ import { CommentInPost } from "./comment";
 import { useSelectedPostStore } from "../store/SelectedPostStore";
 import { CommentCard } from "./CommentCard";
 
+import type { PostProps } from "../types/postType";
+
 type commentProps = {
   liked: boolean;
   retweeted: boolean;
-  post: PostType;
+  post: PostProps;
 };
 
-type PostType = {
-  author: {
-    bio: string;
-    birthday: string;
-    email: string;
-    followers_count: number;
-    following_count: number;
-    id: number;
-    name: string;
-    profile_banner: string;
-    profile_image: string;
-    username: string;
-  };
-  comments: PostType[];
-  created_at: string;
-  id: number;
-  likes: number[];
-  likes_count: number;
-  parent_post: number | null;
-  medias: {
-    id: number;
-    file: string;
-    order: number;
-  }[];
-  post_body: string;
-  retweets: {
-    author: number;
-    created_at: string;
-    id: number;
-    post: number;
-  }[];
-};
 type ActualUser = {
   id: number;
   name: string;
@@ -118,7 +88,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
   const [isLiked, setIsLiked] = useState(liked);
   const [isRetweeted, setIsRetweeted] = useState(retweeted);
 
-  const [postComments, setPostComments] = useState<PostType["comments"]>(
+  const [postComments, setPostComments] = useState<PostProps["comments"]>(
     post.comments,
   );
 

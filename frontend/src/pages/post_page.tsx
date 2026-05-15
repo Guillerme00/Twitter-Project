@@ -5,6 +5,8 @@ import { useParams } from "react-router-dom";
 import { useAuthStore } from "../store/AuthStore";
 import { useEffect, useState } from "react";
 
+import type { PostProps } from "../types/postType";
+
 const api = axios.create({
   baseURL: "http://localhost:8000/api",
   withCredentials: true,
@@ -39,39 +41,6 @@ api.interceptors.response.use(
   },
 );
 
-type PostType = {
-  author: {
-    bio: string;
-    birthday: string;
-    email: string;
-    followers_count: number;
-    following_count: number;
-    id: number;
-    name: string;
-    profile_banner: string;
-    profile_image: string;
-    username: string;
-  };
-  comments: [];
-  created_at: string;
-  id: number;
-  likes: number[];
-  likes_count: number;
-  parent_post: number|null;
-  medias: {
-    id: number;
-    file: string;
-    order: number;
-  }[];
-  post_body: string;
-  retweets: {
-    author: number;
-    created_at: string;
-    id: number;
-    post: number;
-  }[];
-};
-
 export function PostPage() {
   // consts
   const { id } = useParams();
@@ -80,7 +49,7 @@ export function PostPage() {
 
   // States
   const [exist, setExist] = useState("untouched");
-  const [post, setPost] = useState<PostType | null>(null);
+  const [post, setPost] = useState<PostProps | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isRetweeted, setIsRetweeted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -113,10 +82,8 @@ export function PostPage() {
         setExist("found");
         setIsLiked(postRes.data.likes.includes(meRes.data.id));
         setIsRetweeted(
-          postRes.data.retweets.some(
-            (rt: { author: number }) => rt.author === meRes.data.id,
-          ),
-        );
+            postRes.data.retweets.includes(meRes.data.id)
+          );
       } catch (err) {
         console.log(err);
         setExist("notfound");

@@ -14,6 +14,8 @@ import RetweetIcon from "../assets/icons/retweet.svg?react";
 import { CommentInPost } from "../components/comment";
 import { useSelectedPostStore } from "../store/SelectedPostStore";
 
+import type { PostProps } from "../types/postType";
+
 type ActualUser = {
   id: number;
   name: string;
@@ -25,39 +27,6 @@ type ActualUser = {
   followers_count: number;
   following_count: number;
   bithday: string;
-};
-
-type PostProps = {
-  author: {
-    bio: string;
-    birthday: string;
-    email: string;
-    followers_count: number;
-    following_count: number;
-    id: number;
-    name: string;
-    profile_banner: string;
-    profile_image: string;
-    username: string;
-  };
-  comments: PostProps[];
-  created_at: string;
-  id: number;
-  likes: number[];
-  likes_count: number;
-  parent_post: number | null;
-  medias: {
-    id: number;
-    file: string;
-    order: number;
-  }[];
-  post_body: string;
-  retweets: {
-    author: number;
-    created_at: string;
-    id: number;
-    post: number;
-  }[];
 };
 
 const api = axios.create({
@@ -235,23 +204,13 @@ export function Feed() {
       return prevPosts.map((post) => {
         if (post.id !== id) return post;
 
-        const alreadyRetweeted = post.retweets.some(
-          (rt) => rt.author === actualUser.id,
-        );
+        const alreadyRetweeted = post.retweets.includes(actualUser.id)
 
         return {
           ...post,
           retweets: alreadyRetweeted
-            ? post.retweets.filter((rt) => rt.author !== actualUser.id)
-            : [
-                ...post.retweets,
-                {
-                  id: Date.now(),
-                  author: actualUser.id,
-                  post: id,
-                  created_at: new Date().toISOString(),
-                },
-              ],
+            ? post.retweets.filter((id) => id !== actualUser.id)
+            : [...post.retweets, actualUser.id]
         };
       });
     });
@@ -425,15 +384,14 @@ export function Feed() {
               const isLiked = actualUser
                 ? post.likes.includes(actualUser.id)
                 : false;
-              // const isRetweeted = actualUser
-              //   ? post.retweets.some((rt) => rt.author === actualUser.id)
-              //   : false;
-              const isRetweeted = true
+              const isRetweeted = actualUser
+                ? post.retweets.includes(actualUser.id)
+                : false;
               
               if (post.parent_post === null) {
                 return (
                   <div
-                    className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
+                    className="bg-black flex pr-8 pb-2 pt-2 pl-2 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
                     key={post.id}
                     onClick={() => navigate(`/post/${post.id}`)}
                   >
@@ -486,7 +444,7 @@ export function Feed() {
                       {post.medias &&
                         post.medias.map((media) => (
                           <img
-                            className="w-full rounded-md block mt-4 mb-4 max-w-[450px] object-cover cursor-pointer"
+                            className="w-full rounded-md block mt-4 mb-4 object-cover cursor-pointer"
                             src={media.file}
                             alt=""
                             key={media.id}
@@ -526,8 +484,7 @@ export function Feed() {
                               isRetweeted ? "text-green-500" : "text-stone-500"
                             }`}
                           >
-                            {/* {post.retweets.length} */}
-                            {0}
+                            {post.retweets.length}
                           </h2>
                         </div>
 
