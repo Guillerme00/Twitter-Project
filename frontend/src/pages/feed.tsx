@@ -381,14 +381,13 @@ export function Feed() {
             (
               post, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => {
-              const isLiked = actualUser
-                ? post.retweet_post?.likes.includes(actualUser.id)
+              if (post.parent_post === null && post.retweet_post === null) {
+                const isLiked = actualUser
+                ? post.likes.includes(actualUser.id)
                 : false;
               const isRetweeted = actualUser
-                ? post.retweet_post?.retweets.includes(actualUser.id)
+                ? post.retweets.includes(actualUser.id)
                 : false;
-              
-              if (post.parent_post === null && post.retweet_post === null) {
                 return (
                   <div
                     className="bg-black flex pr-8 pb-4 pt-4 pl-2 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
@@ -516,8 +515,13 @@ export function Feed() {
                   </div>
                 );
               }
-              else if (post.retweet_post !== null) {
-                console.log(post)
+              else if (post.retweet_post !== null && post.parent_post === null) {
+                const isLiked = actualUser
+                ? post.retweet_post?.likes.includes(actualUser.id)
+                : false;
+              const isRetweeted = actualUser
+                ? post.retweet_post?.retweets.includes(actualUser.id)
+                : false;
                 return (
             <div
                 className="bg-black flex pr-8 pb-4 pt-4 pl-2 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
@@ -552,31 +556,31 @@ export function Feed() {
 
                 <img
                     className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
-                    src={post.author.profile_image}
+                    src={post.retweet_post?.author.profile_image}
                     alt="profile_picture"
                 />
 
                 <div className="flex flex-col ml-3 w-full">
                     <div className="flex items-center">
                         <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
-                            {post.author.name}
+                            {post.retweet_post?.author.name}
                         </h2>
 
                         <h2 className="pr-1 text-stone-500 text-[16px]">
-                            @{post.author.username}
+                            @{post.retweet_post?.author.username}
                         </h2>
 
                         <h4 className="text-stone-500 text-[16px]">
-                            · {CalcTemp(post.created_at)}
+                            · {CalcTemp(post.retweet_post?.created_at)}
                         </h4>
                     </div>
 
                     <h2 className="text-[#E7E9EA] text-[18px]">
-                        {post.post_body}
+                        {post.retweet_post?.post_body}
                     </h2>
 
-                    {post.medias &&
-                        post.medias.map((media) => (
+                    {post.retweet_post?.medias &&
+                        post.retweet_post?.medias.map((media) => (
                             <img
                                 className="w-full rounded-md block mt-4 mb-4 object-cover cursor-pointer"
                                 src={media.file}
@@ -596,7 +600,7 @@ export function Feed() {
                             <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
 
                             <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
-                                {post.comments.length}
+                                {post.retweet_post?.retweets.length ?? post.retweets.length}
                             </h2>
                         </div>
 
@@ -604,7 +608,7 @@ export function Feed() {
                             className="flex items-center group cursor-pointer"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                retweet(post.id);
+                                retweet(post.retweet_post?.id ?? post.id);
                             }}
                         >
                             <RetweetIcon
@@ -622,7 +626,7 @@ export function Feed() {
                                         : "text-stone-500"
                                 }`}
                             >
-                                {post.retweets.length}
+                                {post.retweet_post.retweets.length}
                             </h2>
                         </div>
 
@@ -630,7 +634,7 @@ export function Feed() {
                             className="flex items-center group cursor-pointer"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                like(post.id);
+                                like(post.retweet_post?.id ?? post.id);
                             }}
                         >
                             <LikeIcon
@@ -648,7 +652,7 @@ export function Feed() {
                                         : "text-stone-500"
                                 }`}
                             >
-                                {post.likes.length}
+                                {post.retweet_post?.likes.length ?? post.likes.length}
                             </h2>
                         </div>
                     </div>
