@@ -194,77 +194,111 @@ export function Feed() {
     }
   };
 
-  const retweet = async (id: number) => {
-    if (!actualUser) return;
+  const retweet = async (id: number, isRetweetPost: boolean) => {
+  if (!actualUser) return;
 
-    let previousPosts: PostProps[] = [];
-    setPosts((prevPosts) => {
-      previousPosts = prevPosts;
+  let previousPosts: PostProps[] = [];
 
-      return prevPosts.map((post) => {
+  setPosts((prevPosts) => {
+    previousPosts = prevPosts;
+
+    return prevPosts.map((post) => {
+      if (isRetweetPost) {
+        if (post.retweet_post?.id !== id) return post;
+
+        const alreadyRetweeted = post.retweet_post.retweets.includes(actualUser.id);
+
+        return {
+          ...post,
+          retweet_post: {
+            ...post.retweet_post,
+            retweets: alreadyRetweeted
+              ? post.retweet_post.retweets.filter((uid) => uid !== actualUser.id)
+              : [...post.retweet_post.retweets, actualUser.id],
+          },
+        };
+      } else {
         if (post.id !== id) return post;
 
-        const alreadyRetweeted = post.retweets.includes(actualUser.id)
+        const alreadyRetweeted = post.retweets.includes(actualUser.id);
 
         return {
           ...post,
           retweets: alreadyRetweeted
-            ? post.retweets.filter((id) => id !== actualUser.id)
-            : [...post.retweets, actualUser.id]
+            ? post.retweets.filter((uid) => uid !== actualUser.id)
+            : [...post.retweets, actualUser.id],
         };
-      });
-    });
-    try {
-      await api.post(
-        `/posts/${id}/retweet/`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
+      }
+    }).filter((post): post is PostProps => post !== null);
+  });
+
+  try {
+    await api.post(
+      `/posts/${id}/retweet/`,
+      {},
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+  } catch (err) {
+    setPosts(previousPosts);
+    console.log(err);
+  }
+};
+
+  const like = async (id: number, isRetweetPost: boolean) => {
+  if (!actualUser) return;
+
+  let previousPosts: PostProps[] = [];
+
+  setPosts((prevPosts) => {
+    previousPosts = prevPosts;
+
+    return prevPosts.map((post) => {
+      if (isRetweetPost) {
+        if (post.retweet_post?.id !== id) return post;
+
+        const alreadyLiked = post.retweet_post.likes.includes(actualUser.id);
+
+        return {
+          ...post,
+          retweet_post: {
+            ...post.retweet_post,
+            likes: alreadyLiked
+              ? post.retweet_post.likes.filter(
+                  (uid) => uid !== actualUser.id,
+                )
+              : [...post.retweet_post.likes, actualUser.id],
           },
-        },
-      );
-    } catch (err) {
-      setPosts(previousPosts);
-      console.log(err);
-    }
-  };
+        };
+      } else {
+        if (post.id !== id) return post;
 
-  const like = async (id: number) => {
-    if (!actualUser) return;
+        const alreadyLiked = post.likes.includes(actualUser.id);
 
-    let previousPosts: PostProps[] = [];
-
-    setPosts((prevPosts) => {
-      previousPosts = prevPosts;
-
-      return prevPosts.map((post) =>
-        post.id === id
-          ? {
-              ...post,
-              likes: post.likes.includes(actualUser.id)
-                ? post.likes.filter((like) => like !== actualUser.id)
-                : [...post.likes, actualUser.id],
-            }
-          : post,
-      );
+        return {
+          ...post,
+          likes: alreadyLiked
+            ? post.likes.filter((uid) => uid !== actualUser.id)
+            : [...post.likes, actualUser.id],
+        };
+      }
     });
+  });
 
-    try {
-      await api.post(
-        `/posts/${id}/like_unlike_post/`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+  try {
+    await api.post(
+      `/posts/${id}/like_unlike_post/`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
-      );
-    } catch (err) {
-      setPosts(previousPosts);
-      console.log(err);
-    }
-  };
+      },
+    );
+  } catch (err) {
+    setPosts(previousPosts);
+    console.log(err);
+  }
+};
 
   // Body
   return (
@@ -468,7 +502,7 @@ export function Feed() {
                           className="flex items-center group cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            retweet(post.id);
+                            retweet(post.id, false);
                           }}
                         >
                           <RetweetIcon
@@ -491,7 +525,7 @@ export function Feed() {
                           className="flex items-center group cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            like(post.id);
+                            like(post.id, false);
                           }}
                         >
                           <LikeIcon
@@ -515,7 +549,7 @@ export function Feed() {
                   </div>
                 );
               }
-              else if (post.retweet_post !== null && post.parent_post === null) {
+              else if (post.retweet_post !== null && post.retweet_post !== undefined && post.parent_post === null) {
                 const isLiked = actualUser
                 ? post.retweet_post?.likes.includes(actualUser.id)
                 : false;
@@ -526,7 +560,7 @@ export function Feed() {
             <div
                 className="bg-black flex pr-8 pb-4 pt-4 pl-2 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
                 key={post.id}
-                onClick={() => navigate(`/post/${post.id}`)}
+                onClick={() => navigate(`/post/${post.retweet_post?.id}`)}
             >
                 {actualUser?.id === post.author.id && (
                     <button
@@ -553,12 +587,18 @@ export function Feed() {
                         </h1>
                     </div>
                 )}
-
-                <img
-                    className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
-                    src={post.retweet_post?.author.profile_image}
-                    alt="profile_picture"
-                />
+                <div className="flex flex-col">
+                  <div className="flex fill-stone-500 text-stone-500 cursor-pointer mb-2 hover:underline items-center"
+                  >
+                    <RetweetIcon className="fill-stone-500 w-4 h-4 mr-1"/>
+                    <h1>Retweeted by @{post.author.username}</h1>
+                  </div>
+                  <div className="flex pl-4">
+                    <img
+                        className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
+                        src={post.retweet_post?.author.profile_image}
+                        alt="profile_picture"
+                    />
 
                 <div className="flex flex-col ml-3 w-full">
                     <div className="flex items-center">
@@ -600,7 +640,7 @@ export function Feed() {
                             <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
 
                             <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
-                                {post.retweet_post?.retweets.length ?? post.retweets.length}
+                                {post.retweet_post?.comments?.length ?? 0}
                             </h2>
                         </div>
 
@@ -608,7 +648,7 @@ export function Feed() {
                             className="flex items-center group cursor-pointer"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                retweet(post.retweet_post?.id ?? post.id);
+                                retweet(post.retweet_post?.id ?? post.id, true);
                             }}
                         >
                             <RetweetIcon
@@ -626,7 +666,7 @@ export function Feed() {
                                         : "text-stone-500"
                                 }`}
                             >
-                                {post.retweet_post.retweets.length}
+                                {post.retweet_post?.retweets.length ?? 0}
                             </h2>
                         </div>
 
@@ -634,7 +674,7 @@ export function Feed() {
                             className="flex items-center group cursor-pointer"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                like(post.retweet_post?.id ?? post.id);
+                                like(post.retweet_post?.id ?? post.id, true);
                             }}
                         >
                             <LikeIcon
@@ -658,8 +698,11 @@ export function Feed() {
                     </div>
                 </div>
             </div>
+            </div>
+          </div>
                 );
               }
+              return null
             },
           )}
         </div>
