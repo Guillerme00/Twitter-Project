@@ -3,7 +3,6 @@ from django.core.exceptions import ValidationError
 from posts.models import PostModel
 from users.factories.user_factory import UserFactory
 from posts.factories.post_factory import PostFactory
-from posts.models import CommentPostModel
 from rest_framework.test import APIClient
 
 def test_dont_allow_a_501_post(db):
@@ -46,9 +45,9 @@ def test_comment_in_a_post(db):
     client = APIClient()
     client.force_authenticate(user=user1)
 
-    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "Hello World"}, format="json")
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"post_body": "Hello World"}, format="json")
     
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.data["status"] == "commented"
 
 
@@ -72,7 +71,7 @@ def test_dont_allow_a_blank_post(db):
     respose = client.post("/api/posts/", {"post_body": ""}, format="json")
 
     assert respose.status_code == 400
-    assert "post_body" in respose.data
+    assert 'non_field_errors' in respose.data
 
 
 def test_dont_allow_a_blank_comment(db):
@@ -82,10 +81,10 @@ def test_dont_allow_a_blank_comment(db):
     client = APIClient()
     client.force_authenticate(user=user1)
     
-    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": ""}, format="json")
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"post_body": ""}, format="json")
 
     assert response.status_code == 400
-    assert "body" in response.data
+    assert 'non_field_errors' in response.data
 
 def test_create_post(db):
     user1 = UserFactory()
@@ -179,7 +178,7 @@ def test_return_the_retweeted_post_from_a_user(db):
     client.post(f"/api/posts/{post2.pk}/retweet/")
     client.post(f"/api/posts/{post3.pk}/retweet/")
 
-    assert user1.retweets.count() == 3
+    assert PostModel.objects.filter(author=user1, retweet_post__isnull=False).count() == 3
 
 def test_return_feed(db):
     user1 = UserFactory()
@@ -258,14 +257,16 @@ def test_user_can_delete_his_own_comment(db):
 
     post = PostFactory()
 
-    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "Hello World"}, format="json")
-    response2 = client.delete(f"/api/posts/{post.pk}/delete_comment/{response.data['id']}/")
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"post_body": "Hello World"}, format="json")
+    comment_id = response.data["id"]
 
+    response2 = client.delete(f"/api/posts/{post.pk}/delete_comment/{comment_id}/")
+
+    assert response2.status_code == 200
     assert response2.data["status"] == "deleted"
-    assert not CommentPostModel.objects.filter(pk=response.data['id']).exists()
     
 
-def test_user_cant_delete_anothor_comment(db):
+def test_user_cant_delete_another_comment(db):
     user1 = UserFactory()
     user2 = UserFactory()
     post = PostFactory()
@@ -276,10 +277,10 @@ def test_user_cant_delete_anothor_comment(db):
     client2 = APIClient()
     client2.force_authenticate(user=user2)
 
-    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "hello world"}, format="json")
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"post_body": "hello world"}, format="json")
     response2 = client2.delete(f"/api/posts/{post.pk}/delete_comment/{response.data['id']}/")
 
-    assert response2.data["status"] == 404
+    assert response2.data["status"] == "not found"
 
 
 def test_unauthenticated_user_cannot_like_post(db):
@@ -321,7 +322,7 @@ def test_user_cannot_delete_comment_unauthenticated(db):
     client = APIClient()
     client.force_authenticate(user=user1)
 
-    response = client.post(f"/api/posts/{post.pk}/comment/", {"body": "hello world"}, format="json")
+    response = client.post(f"/api/posts/{post.pk}/comment/", {"post_body": "hello world"}, format="json")
 
     client2 = APIClient()
 

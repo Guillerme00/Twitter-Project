@@ -14,6 +14,8 @@ import RetweetIcon from "../assets/icons/retweet.svg?react";
 import { CommentInPost } from "../components/comment";
 import { useSelectedPostStore } from "../store/SelectedPostStore";
 
+import type { PostProps } from "../types/postType";
+
 type ActualUser = {
   id: number;
   name: string;
@@ -25,38 +27,6 @@ type ActualUser = {
   followers_count: number;
   following_count: number;
   bithday: string;
-};
-
-type PostProps = {
-  author: {
-    bio: string;
-    birthday: string;
-    email: string;
-    followers_count: number;
-    following_count: number;
-    id: number;
-    name: string;
-    profile_banner: string;
-    profile_image: string;
-    username: string;
-  };
-  comments: [];
-  created_at: string;
-  id: number;
-  likes: number[];
-  likes_count: number;
-  medias: {
-    id: number;
-    file: string;
-    order: number;
-  }[];
-  post_body: string;
-  retweets: {
-    author: number;
-    created_at: string;
-    id: number;
-    post: number;
-  }[];
 };
 
 const api = axios.create({
@@ -110,11 +80,36 @@ export function Feed() {
   const [Posts, setPosts] = useState<PostProps[]>([]);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [openedPostMenu, setOpenedPostMenu] = useState<number | null>(null);
 
   //functions
   const validPost = postMessage.length >= 1 && postMessage.length <= 500;
 
-  function CalcTemp(created_at: string) {
+  const clearPostImage = () => {
+    setImage(null);
+    setPreview(null);
+  };
+
+  const openClosePostMenu = (id: number) => {
+    if (openedPostMenu !== null && openedPostMenu === id) {
+      setOpenedPostMenu(null);
+    } else if (openedPostMenu !== null || openedPostMenu !== id) {
+      setOpenedPostMenu(id);
+    }
+  };
+
+  const deletePost = async (id: number) => {
+    setPosts((prevPosts) => prevPosts.filter((post) => post.id !== id));
+    try {
+      await api.delete(`/posts/${id}/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const CalcTemp = (created_at: string) => {
     const now = new Date();
     const postDate = new Date(created_at);
     const time = now.getTime() - postDate.getTime();
@@ -129,7 +124,7 @@ export function Feed() {
     } else {
       return `${postDate.getDate()}/${postDate.getMonth() + 1}/${postDate.getFullYear()}`; //day
     }
-  }
+  };
 
   // UseEffects
   useEffect(() => {
@@ -199,45 +194,55 @@ export function Feed() {
     }
   };
 
-  const retweet = async (id: number) => {
+  const retweet = async (id: number, isRetweetPost: boolean) => {
     if (!actualUser) return;
 
     let previousPosts: PostProps[] = [];
+
     setPosts((prevPosts) => {
       previousPosts = prevPosts;
 
-      return prevPosts.map((post) => {
-        if (post.id !== id) return post;
+      return prevPosts
+        .map((post) => {
+          if (isRetweetPost) {
+            if (post.retweet_post?.id !== id) return post;
 
-        const alreadyRetweeted = post.retweets.some(
-          (rt) => rt.author === actualUser.id,
-        );
+            const alreadyRetweeted = post.retweet_post.retweets.includes(
+              actualUser.id,
+            );
 
-        return {
-          ...post,
-          retweets: alreadyRetweeted
-            ? post.retweets.filter((rt) => rt.author !== actualUser.id)
-            : [
-                ...post.retweets,
-                {
-                  id: Date.now(),
-                  author: actualUser.id,
-                  post: id,
-                  created_at: new Date().toISOString(),
-                },
-              ],
-        };
-      });
+            return {
+              ...post,
+              retweet_post: {
+                ...post.retweet_post,
+                retweets: alreadyRetweeted
+                  ? post.retweet_post.retweets.filter(
+                      (uid) => uid !== actualUser.id,
+                    )
+                  : [...post.retweet_post.retweets, actualUser.id],
+              },
+            };
+          } else {
+            if (post.id !== id) return post;
+
+            const alreadyRetweeted = post.retweets.includes(actualUser.id);
+
+            return {
+              ...post,
+              retweets: alreadyRetweeted
+                ? post.retweets.filter((uid) => uid !== actualUser.id)
+                : [...post.retweets, actualUser.id],
+            };
+          }
+        })
+        .filter((post): post is PostProps => post !== null);
     });
+
     try {
       await api.post(
         `/posts/${id}/retweet/`,
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
+        { headers: { Authorization: `Bearer ${accessToken}` } },
       );
     } catch (err) {
       setPosts(previousPosts);
@@ -245,7 +250,7 @@ export function Feed() {
     }
   };
 
-  const like = async (id: number) => {
+  const like = async (id: number, isRetweetPost: boolean) => {
     if (!actualUser) return;
 
     let previousPosts: PostProps[] = [];
@@ -253,16 +258,34 @@ export function Feed() {
     setPosts((prevPosts) => {
       previousPosts = prevPosts;
 
-      return prevPosts.map((post) =>
-        post.id === id
-          ? {
-              ...post,
-              likes: post.likes.includes(actualUser.id)
-                ? post.likes.filter((like) => like !== actualUser.id)
-                : [...post.likes, actualUser.id],
-            }
-          : post,
-      );
+      return prevPosts.map((post) => {
+        if (isRetweetPost) {
+          if (post.retweet_post?.id !== id) return post;
+
+          const alreadyLiked = post.retweet_post.likes.includes(actualUser.id);
+
+          return {
+            ...post,
+            retweet_post: {
+              ...post.retweet_post,
+              likes: alreadyLiked
+                ? post.retweet_post.likes.filter((uid) => uid !== actualUser.id)
+                : [...post.retweet_post.likes, actualUser.id],
+            },
+          };
+        } else {
+          if (post.id !== id) return post;
+
+          const alreadyLiked = post.likes.includes(actualUser.id);
+
+          return {
+            ...post,
+            likes: alreadyLiked
+              ? post.likes.filter((uid) => uid !== actualUser.id)
+              : [...post.likes, actualUser.id],
+          };
+        }
+      });
     });
 
     try {
@@ -283,19 +306,22 @@ export function Feed() {
 
   // Body
   return (
-    <div className="bg-black h-screen text-[#E7E9EA] flex justify-center overflow-hidden">
-      <div className="flex w-full max-w-[1300px]">
+    <div className="bg-black h-screen text-[#E7E9EA] flex justify-center">
+      <div className="flex w-full max-w-[1300px] overflow-hidden">
         {/* Left Side */}
         <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
           <div className="top-0 py-2 mr-8">
             <XIcon className="fill-[#E7E9EA] w-8 h-8 ml-3 mb-4 cursor-pointer" />
-            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
+            <button
+              className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+              onClick={() => navigate("/home")}
+            >
               <HomeIcon className="fill-[#E7E9EA] w-8 h-8" />
-              <h2 className="text-xl" onClick={() => navigate("/home")}>
-                Home
-              </h2>
+              <h2 className="text-xl">Home</h2>
             </button>
-            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
+            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+            onClick={() => navigate(`/profile/${actualUser?.id}`)}
+            >
               <MeIcon className="fill-[#E7E9EA] w-8 h-8" />
               <h2 className="text-xl">Me</h2>
             </button>
@@ -307,7 +333,7 @@ export function Feed() {
         </div>
 
         {/* mid side */}
-        <div className="border-r border-stone-800 flex-1 w-full max-w-[800px] overflow-y-auto no-scrollbar">
+        <div className="border-r border-stone-800 flex-1 w-full max-w-[800px] overflow-y-auto no-scrollbar h-screen">
           <div className="grid grid-cols-2 border-b border-stone-800">
             <div className="p-4 cursor-pointer font-bold text-center hover:bg-stone-900">
               <div className="inline-block">
@@ -359,6 +385,14 @@ export function Feed() {
               </div>
               {preview && (
                 <>
+                  <div className="relative">
+                    <button
+                      className=" cursor-pointer absolute bg-black/50 p-1 top-2 right-2 rounded-full w-8 h-8 font-[E7E9EA] flex items-center justify-center"
+                      onClick={() => clearPostImage()}
+                    >
+                      X
+                    </button>
+                  </div>
                   <img
                     src={preview}
                     alt="preview"
@@ -387,114 +421,295 @@ export function Feed() {
             (
               post, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => {
-              const isLiked = actualUser
-                ? post.likes.includes(actualUser.id)
-                : false;
-              const isRetweeted = actualUser
-                ? post.retweets.some((rt) => rt.author === actualUser.id)
-                : false;
-              return (
-                <div
-                  className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer"
-                  key={post.id}
-                  onClick={() => navigate(`/post/${post.id}`)}
-                >
-                  <img
-                    className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
-                    src={post.author.profile_image}
-                    alt="profile_picture"
-                  />
-                  <div className="flex flex-col ml-3">
-                    <div className="flex items-center">
-                      <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
-                        {post.author.name}
-                      </h2>
-                      <h2 className="pr-1 text-stone-500 text-[16px]">
-                        @{post.author.username}
-                      </h2>
-                      <h4 className="text-stone-500 text-[16px]">
-                        {" "}
-                        · {CalcTemp(post.created_at)}
-                      </h4>
-                    </div>
-
-                    <h2 className="text-[#E7E9EA] text-[18px]">
-                      {post.post_body}
-                    </h2>
-                    {post.medias &&
-                      post.medias.map((media) => (
-                        <img
-                          className="w-full rounded-md block mt-4 mb-4 max-w-[450px] object-cover cursor-pointer"
-                          src={media.file}
-                          alt=""
-                          key={media.id}
-                        />
-                      ))}
-
-                    <div className="flex justify-center gap-32 mt-4 pr-16">
-                      <div
-                        className="flex items-center group cursor-pointer"
+              if (post.parent_post === null && post.retweet_post === null) {
+                const isLiked = actualUser
+                  ? post.likes.includes(actualUser.id)
+                  : false;
+                const isRetweeted = actualUser
+                  ? post.retweets.includes(actualUser.id)
+                  : false;
+                return (
+                  <div
+                    className="bg-black flex pr-8 pb-4 pt-4 pl-2 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
+                    key={post.id}
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  >
+                    {actualUser?.id === post.author.id && (
+                      <button
+                        className="font-white absolute h-8 w-8 flex items-center justify-center top-3 right-3 cursor-pointer hover:bg-stone-700 p-2 rounded-full transition-colors duration-300"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedPost(post);
+                          openClosePostMenu(post.id);
                         }}
                       >
-                        <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
-                        <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
-                          {post.comments.length}
+                        •••
+                      </button>
+                    )}
+                    {openedPostMenu === post.id && (
+                      <div className="absolute top-12 right-3 w-56 bg-black border border-stone-800 rounded-2xl shadow-xl z-50 transition-colors duration-300">
+                        <h1
+                          className="text-red-500 font-bold ml-4"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deletePost(post.id);
+                          }}
+                        >
+                          Delete post
+                        </h1>
+                      </div>
+                    )}
+                    <img
+                      className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
+                      src={post.author.profile_image}
+                      alt="profile_picture"
+                    />
+                    <div className="flex flex-col ml-3 w-full">
+                      <div className="flex items-center">
+                        <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
+                          {post.author.name}
                         </h2>
+                        <h2 className="pr-1 text-stone-500 text-[16px]">
+                          @{post.author.username}
+                        </h2>
+                        <h4 className="text-stone-500 text-[16px]">
+                          {" "}
+                          · {CalcTemp(post.created_at)}
+                        </h4>
                       </div>
 
-                      <div
-                        className="flex items-center group cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          retweet(post.id);
-                        }}
-                      >
-                        <RetweetIcon
-                          className={`w-6 h-6 transition-colors duration-300 ${
-                            isRetweeted
-                              ? "fill-green-500"
-                              : "fill-stone-500 group-hover:fill-green-500"
-                          }`}
-                        />
-                        <h2
-                          className={`ml-1 transition-colors duration-300 ${
-                            isRetweeted ? "text-green-500" : "text-stone-500"
-                          }`}
-                        >
-                          {post.retweets.length}
-                        </h2>
-                      </div>
+                      <h2 className="text-[#E7E9EA] text-[18px]">
+                        {post.post_body}
+                      </h2>
+                      {post.medias &&
+                        post.medias.map((media) => (
+                          <img
+                            className="w-full rounded-md block mt-4 mb-4 object-cover cursor-pointer"
+                            src={media.file}
+                            alt=""
+                            key={media.id}
+                          />
+                        ))}
 
-                      <div
-                        className="flex items-center group cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          like(post.id);
-                        }}
-                      >
-                        <LikeIcon
-                          className={`w-6 h-6 transition-colors duration-300 ${
-                            isLiked
-                              ? "fill-red-600"
-                              : "fill-stone-500 group-hover:fill-red-600"
-                          }`}
-                        />
-
-                        <h2
-                          className={`ml-1 transition-colors duration-300 ${
-                            isLiked ? "text-red-600" : "text-stone-500"
-                          }`}
+                      <div className="flex justify-center gap-32 mt-4">
+                        <div
+                          className="flex items-center group cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPost(post);
+                          }}
                         >
-                          {post.likes.length}
-                        </h2>
+                          <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
+                          <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
+                            {post.comments.length}
+                          </h2>
+                        </div>
+
+                        <div
+                          className="flex items-center group cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            retweet(post.id, false);
+                          }}
+                        >
+                          <RetweetIcon
+                            className={`w-6 h-6 transition-colors duration-300 ${
+                              isRetweeted
+                                ? "fill-green-500"
+                                : "fill-stone-500 group-hover:fill-green-500"
+                            }`}
+                          />
+                          <h2
+                            className={`ml-1 transition-colors duration-300 ${
+                              isRetweeted ? "text-green-500" : "text-stone-500"
+                            }`}
+                          >
+                            {post.retweets.length}
+                          </h2>
+                        </div>
+
+                        <div
+                          className="flex items-center group cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            like(post.id, false);
+                          }}
+                        >
+                          <LikeIcon
+                            className={`w-6 h-6 transition-colors duration-300 ${
+                              isLiked
+                                ? "fill-red-600"
+                                : "fill-stone-500 group-hover:fill-red-600"
+                            }`}
+                          />
+
+                          <h2
+                            className={`ml-1 transition-colors duration-300 ${
+                              isLiked ? "text-red-600" : "text-stone-500"
+                            }`}
+                          >
+                            {post.likes.length}
+                          </h2>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
+                );
+              } else if (
+                post.retweet_post !== null &&
+                post.retweet_post !== undefined &&
+                post.parent_post === null
+              ) {
+                const isLiked = actualUser
+                  ? post.retweet_post?.likes.includes(actualUser.id)
+                  : false;
+                const isRetweeted = actualUser
+                  ? post.retweet_post?.retweets.includes(actualUser.id)
+                  : false;
+                return (
+                  <div
+                    className="bg-black flex pr-8 pb-4 pt-4 pl-2 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
+                    key={post.id}
+                    onClick={() => navigate(`/post/${post.retweet_post?.id}`)}
+                  >
+                    {actualUser?.id === post.author.id && (
+                      <button
+                        className="font-white absolute h-8 w-8 flex items-center justify-center top-3 right-3 cursor-pointer hover:bg-stone-700 p-2 rounded-full transition-colors duration-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openClosePostMenu(post.id);
+                        }}
+                      >
+                        •••
+                      </button>
+                    )}
+
+                    {openedPostMenu === post.id && (
+                      <div className="absolute top-12 right-3 w-56 bg-black border border-stone-800 rounded-2xl shadow-xl z-50 transition-colors duration-300">
+                        <h1
+                          className="text-red-500 font-bold ml-4"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deletePost(post.id);
+                          }}
+                        >
+                          Delete post
+                        </h1>
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <div className="flex fill-stone-500 text-stone-500 cursor-pointer mb-2 hover:underline items-center">
+                        <RetweetIcon className="fill-stone-500 w-4 h-4 mr-1" />
+                        <h1>Retweeted by @{post.author.username}</h1>
+                      </div>
+                      <div className="flex pl-4">
+                        <img
+                          className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
+                          src={post.retweet_post?.author.profile_image}
+                          alt="profile_picture"
+                        />
+
+                        <div className="flex flex-col ml-3 w-full">
+                          <div className="flex items-center">
+                            <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
+                              {post.retweet_post?.author.name}
+                            </h2>
+
+                            <h2 className="pr-1 text-stone-500 text-[16px]">
+                              @{post.retweet_post?.author.username}
+                            </h2>
+
+                            <h4 className="text-stone-500 text-[16px]">
+                              · {CalcTemp(post.retweet_post?.created_at)}
+                            </h4>
+                          </div>
+
+                          <h2 className="text-[#E7E9EA] text-[18px]">
+                            {post.retweet_post?.post_body}
+                          </h2>
+
+                          {post.retweet_post?.medias &&
+                            post.retweet_post?.medias.map((media) => (
+                              <img
+                                className="w-full rounded-md block mt-4 mb-4 object-cover cursor-pointer"
+                                src={media.file}
+                                alt=""
+                                key={media.id}
+                              />
+                            ))}
+
+                          <div className="flex justify-center gap-32 mt-4">
+                            <div
+                              className="flex items-center group cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPost(post);
+                              }}
+                            >
+                              <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
+
+                              <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
+                                {post.retweet_post?.comments?.length ?? 0}
+                              </h2>
+                            </div>
+
+                            <div
+                              className="flex items-center group cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                retweet(post.retweet_post?.id ?? post.id, true);
+                              }}
+                            >
+                              <RetweetIcon
+                                className={`w-6 h-6 transition-colors duration-300 ${
+                                  isRetweeted
+                                    ? "fill-green-500"
+                                    : "fill-stone-500 group-hover:fill-green-500"
+                                }`}
+                              />
+
+                              <h2
+                                className={`ml-1 transition-colors duration-300 ${
+                                  isRetweeted
+                                    ? "text-green-500"
+                                    : "text-stone-500"
+                                }`}
+                              >
+                                {post.retweet_post?.retweets.length ?? 0}
+                              </h2>
+                            </div>
+
+                            <div
+                              className="flex items-center group cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                like(post.retweet_post?.id ?? post.id, true);
+                              }}
+                            >
+                              <LikeIcon
+                                className={`w-6 h-6 transition-colors duration-300 ${
+                                  isLiked
+                                    ? "fill-red-600"
+                                    : "fill-stone-500 group-hover:fill-red-600"
+                                }`}
+                              />
+
+                              <h2
+                                className={`ml-1 transition-colors duration-300 ${
+                                  isLiked ? "text-red-600" : "text-stone-500"
+                                }`}
+                              >
+                                {post.retweet_post?.likes.length ??
+                                  post.likes.length}
+                              </h2>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
             },
           )}
         </div>

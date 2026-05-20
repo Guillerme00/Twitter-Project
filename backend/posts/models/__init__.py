@@ -1,8 +1,5 @@
-from .post_model import PostModel, CommentPostModel, PostFilesModel
-from .retweet_model import RetweetModel
+from .post_model import PostModel, PostFilesModel
 __all__ = [
     "PostModel",
     "PostFilesModel",
-    "CommentPostModel",
-    "RetweetModel"
 ]

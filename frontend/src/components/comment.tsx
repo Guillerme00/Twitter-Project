@@ -2,43 +2,14 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/AuthStore";
 import { useSelectedPostStore } from "../store/SelectedPostStore";
+import { useNavigate } from "react-router-dom";
+
+import type { PostProps } from "../types/postType";
 
 type Props = {
   post: PostProps;
   user: ActualUser;
   token: string;
-};
-
-type PostProps = {
-  author: {
-    bio: string;
-    birthday: string;
-    email: string;
-    followers_count: number;
-    following_count: number;
-    id: number;
-    name: string;
-    profile_banner: string;
-    profile_image: string;
-    username: string;
-  };
-  comments: [];
-  created_at: string;
-  id: number;
-  likes: number[];
-  likes_count: number;
-  medias: {
-    id: number;
-    file: string;
-    order: number;
-  }[];
-  post_body: string;
-  retweets: {
-    author: number;
-    created_at: string;
-    id: number;
-    post: number;
-  }[];
 };
 
 type ActualUser = {
@@ -91,10 +62,14 @@ api.interceptors.response.use(
 
 export function CommentInPost({ post, user, token }: Props) {
   const [postComment, setpostComment] = useState("");
-
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const validPost = postComment.length >= 1 && postComment.length <= 500;
-  const setSelectedPost = useSelectedPostStore((state) => state.setSelectedPost);
+  const setSelectedPost = useSelectedPostStore(
+    (state) => state.setSelectedPost,
+  );
+  const navigate = useNavigate();
 
   function CalcTemp(created_at: string) {
     const now = new Date();
@@ -122,30 +97,34 @@ export function CommentInPost({ post, user, token }: Props) {
   }, []);
 
   const handlePostComment = () => {
-    const body = {
-      body: postComment,
-    };
+    const formData = new FormData();
+    if (image) {
+      formData.append("post_body", postComment);
+      formData.append("files", image);
+    } else {
+      formData.append("post_body", postComment);
+    }
     try {
-      const response = api.post(`/posts/${post.id}/comment/`, body, {
+      api.post(`/posts/${post.id}/comment/`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setpostComment("")
-      setSelectedPost(null)
-      return console.log(response);
+      setpostComment("");
+      setSelectedPost(null);
+      navigate(`/post/${post.id}`);
     } catch (err) {
       console.log(err);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-      <div className="bg-stone-900 w-full max-w-[800px] p-4 rounded-xl overflow-y-auto max-h-[90vh] overflow-x-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
+      <div className="bg-stone-900 w-full max-w-[800px] p-4 rounded-xl overflow-y-auto max-h-[90vh] overflow-x-hidden no-scrollbar">
         <div>
           <button
-          className="hover:bg-stone-800 w-8 h-8 flex items-center justify-center rounded-full font-bold cursor-pointer text-[20px] transition-colors duration-300"
-          onClick={() => setSelectedPost(null)}
+            className="hover:bg-stone-800 w-8 h-8 flex items-center justify-center rounded-full font-bold cursor-pointer text-[20px] transition-colors duration-300"
+            onClick={() => setSelectedPost(null)}
           >
             X
           </button>
@@ -187,34 +166,61 @@ export function CommentInPost({ post, user, token }: Props) {
         </div>
         <div className="flex flex-col p-4 border-b border-stone-800">
           <div className="flex flex-col">
-            <div className="flex">
-              <img
-                src={user.profile_image}
-                alt="profile_picture"
-                className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
-              />
-              <textarea
-                placeholder="Post your reply"
-                className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none"
-                onChange={(s) => {
-                  setpostComment(s.target.value);
-                  s.target.style.height = "auto";
-                  s.target.style.height = s.target.scrollHeight + "px";
-                }}
-                value={postComment}
-              />
+            <div>
+              <div className="flex">
+                <img
+                  src={user.profile_image}
+                  alt="profile_picture"
+                  className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
+                />
+                <textarea
+                  placeholder="Post your reply"
+                  className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none"
+                  onChange={(s) => {
+                    setpostComment(s.target.value);
+                    s.target.style.height = "auto";
+                    s.target.style.height = s.target.scrollHeight + "px";
+                  }}
+                  onPaste={(e) => {
+                    const items = e.clipboardData.items;
+
+                    for (let i = 0; i < items.length; i++) {
+                      const item = items[i];
+
+                      if (item.type.startsWith("image")) {
+                        const file = item.getAsFile();
+
+                        if (file) {
+                          setImage(file);
+
+                          const url = URL.createObjectURL(file);
+                          setPreview(url);
+                        }
+                      }
+                    }
+                  }}
+                  value={postComment}
+                />
+              </div>
             </div>
+            {preview && (
+              <>
+                <img src={preview} alt="preview" className="mt-2 rounded-xl " />
+                <div className="border-b border-stone-800 pb-4" />
+              </>
+            )}
           </div>
         </div>
         <div className="flex justify-end mt-4">
-          <button className={`hover:bg-stone-300 w-24 h-8 p-1 pr-2 pl-2 text-bold flex items-center justify-center rounded-full font-bold cursor-pointer text-[16px] bg-[#E7E9EA] text-stone-900 transition-colors duration-300
+          <button
+            className={`hover:bg-stone-300 w-24 h-8 p-1 pr-2 pl-2 text-bold flex items-center justify-center rounded-full font-bold cursor-pointer text-[16px] bg-[#E7E9EA] text-stone-900 transition-colors duration-300
           ${
-                validPost
-                  ? "bg-[#E7E9EA] text-black hover:bg-[#cfcfcf] cursor-pointer"
-                  : "bg-stone-700 text-black opacity-50 cursor-not-allowed"
-              }
+            validPost
+              ? "bg-[#E7E9EA] text-black hover:bg-[#cfcfcf] cursor-pointer"
+              : "bg-stone-700 text-black opacity-50 cursor-not-allowed"
+          }
           `}
-          onClick={handlePostComment}
+            onClick={handlePostComment}
           >
             Reply
           </button>{" "}
