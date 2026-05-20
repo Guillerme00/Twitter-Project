@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import { MeProfile } from "./pages/me_page";
 import { LoginPage } from "./pages/login_page";
 import { RegisterPage } from "./pages/register_page";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -37,6 +38,15 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/profile/:id/"
+          element={
+            <PrivateRoute>
+              <MeProfile />
+            </PrivateRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </BrowserRouter>
   );
