@@ -5,6 +5,7 @@ from posts.serializers import PostSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from django.core.exceptions import ObjectDoesNotExist
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = PostModel.objects.all()
@@ -75,6 +76,6 @@ class PostViewSet(viewsets.ModelViewSet):
                     retweet_post=retweeted_post
                 )
                 return Response({"status": "retweeted"}, status=201)
-        except:
+        except ObjectDoesNotExist:
             return Response({"Error": "Retweet is not valid"}, status=404)
             
