@@ -124,17 +124,27 @@ export const MeProfile = () => {
           </div>
 
           {/* mid side */}
-          <div className="w-full max-w-[600px] border-r border-stone-800 mt-2 relative">
+          <div className="w-full max-w-[600px] border-r border-stone-800 mt-2 relative text-[#E7E9EA]">
             <div className="cursor-pointer flex items-center sticky top-0 z-50 bg-black/80 backdrop-blur-sm">
               <ArrowIcon className="fill-[#E7E9EA] hover:bg-stone-800 h-10 w-10 transition-colors duration-300 p-2 rounded-full"
               onClick={() => navigate("/home")}/>
               <div className="ml-2">
-                <h1 className="font-bold text-[20px]">Guillerme</h1>
-                <h2 className="text-[14px] text-stone-500">704 posts</h2>
+                <h1 className="font-bold text-[20px] leading-none">Name</h1>
+                <h2 className="text-[14px] text-stone-500 leading-none">X posts</h2>
               </div>
             </div>
-            <div>
-              <img src={profileOwner?.profile_banner} alt="profile banner" className="w-full border-stone-500 border-b border-r border-t border-l" />
+            <div className="relative">
+              <img src={profileOwner?.profile_banner} alt="profile banner" className="w-full h-[250px]" />
+              <img src={profileOwner?.profile_image} alt="profile image" className="w-28 h-28 rounded-full absolute bottom-4 left-8 border-black" />
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="ml-4 mt-4 flex flex-col gap-0">
+                <h1 className="text-[28px] font-bold leading-none m-0 p-0">Name</h1>
+                <span className="text-[20px] text-stone-500 leading-none m-0 p-0">@username</span>
+              </div>
+              <button className="rounded-full flex items-center justify-center border border-stone-500 font-bold px-4 py-2 cursor-pointer mr-4 hover:bg-stone-800 transition-colors duration-300">
+                Edit Profile
+              </button>
             </div>
           </div>
 
