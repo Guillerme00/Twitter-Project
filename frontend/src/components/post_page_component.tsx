@@ -36,7 +36,7 @@ type ActualUser = {
   bio: string;
   followers_count: number;
   following_count: number;
-  bithday: string;
+  birthday: string;
 };
 
 const api = axios.create({
