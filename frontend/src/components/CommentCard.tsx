@@ -84,7 +84,7 @@ export const CommentCard = ({ post, onDelete }: commentProps) => {
     post.likes.includes(actualUser?.id ?? -1),
   );
   const [isRetweeted, setIsRetweeted] = useState(
-     post.retweets.includes(actualUser?.id ?? -1),
+    post.retweets.includes(actualUser?.id ?? -1),
   );
 
   const like = async (id: number) => {
@@ -139,7 +139,7 @@ export const CommentCard = ({ post, onDelete }: commentProps) => {
       await api.delete(`/posts/${id}/`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-    onDelete(id)
+      onDelete(id);
     } catch (err) {
       console.log(err);
     }
@@ -202,20 +202,16 @@ export const CommentCard = ({ post, onDelete }: commentProps) => {
       }
     };
     handleInit();
-  }, [
-    accessToken,
-    actualUser,
-    navigate,
-    post.likes,
-    post.retweets,
-    setAccessToken,
-  ]);
+  }, [accessToken, navigate, setAccessToken]);
 
   useEffect(() => {
     if (SelectedPost === null) {
       document.body.style.overflow = "auto";
     }
   }, [SelectedPost]);
+
+  console.log(post);
+
   return (
     <div
       className="bg-black flex p-4 mr-2 border-b border-stone-800 w-[100%] cursor-pointer relative"
@@ -286,7 +282,7 @@ export const CommentCard = ({ post, onDelete }: commentProps) => {
           >
             <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
             <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
-              {post.comments?.length ?? 0}
+              {post.comments_count}
             </h2>
           </div>
 

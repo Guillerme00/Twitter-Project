@@ -12,7 +12,8 @@ export type PostProps = {
     username: string;
   };
 
-  comments: PostProps[];
+  comments?: PostProps[];
+  comments_count?: number;
 
   created_at: string;
   id: number;

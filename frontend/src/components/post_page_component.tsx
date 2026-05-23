@@ -157,8 +157,8 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
   };
 
   const handleDeleteComment = (id: number) => {
-  setPostComments(prev => prev.filter(c => c.id !== id))
-  }
+    setPostComments((prev) => prev.filter((c) => c.id !== id));
+  };
 
   const CalcTemp = (created_at: string) => {
     const now = new Date();
@@ -255,7 +255,10 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
               <HomeIcon className="fill-[#E7E9EA] w-8 h-8" />
               <h2 className="text-xl">Home</h2>
             </button>
-            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
+            <button
+              className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+              onClick={() => navigate(`/profile/${actualUser?.id}`)}
+            >
               <MeIcon className="fill-[#E7E9EA] w-8 h-8" />
               <h2 className="text-xl">Me</h2>
             </button>
@@ -458,7 +461,11 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
             (
               post_comment, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => (
-              <CommentCard post={post_comment} onDelete={handleDeleteComment} key={post_comment.id} />
+              <CommentCard
+                post={post_comment}
+                onDelete={handleDeleteComment}
+                key={post_comment.id}
+              />
             ),
           )}
         </div>
