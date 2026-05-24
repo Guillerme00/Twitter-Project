@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import type { PostProps } from "../types/postType";
 import { useSelectedPostStore } from "../store/SelectedPostStore";
 import { CommentInPost } from "../components/comment";
+import { EditProfile } from "../components/edit_profile";
 
 type user = {
   bio: string;
@@ -96,6 +97,25 @@ export const MeProfile = () => {
   const [userPosts, setUserPosts] = useState<PostProps[] | null>(null);
   const [actualUser, setActualUser] = useState<user | null>(null);
   const [openedPostMenu, setOpenedPostMenu] = useState<number | null>(null);
+  const [editProfile, setEditProfile] = useState(false);
+  const [edited, setEdited] = useState(false);
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+
+  const handleSaveProfile = () => {
+    try {
+      setEdited((prev) => !prev);
+      console.log(edited);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const toggleEditProfile = () => {
+    setEditProfile((prev) => !prev);
+    setName(profileOwner?.name ?? "");
+    setBio(profileOwner?.bio ?? "");
+  };
 
   const openClosePostMenu = (id: number) => {
     if (openedPostMenu !== null && openedPostMenu === id) {
@@ -365,9 +385,25 @@ export const MeProfile = () => {
                   @{profileOwner?.username}
                 </span>
               </div>
-              <button className="rounded-full flex items-center justify-center border border-stone-500 font-bold px-4 py-2 cursor-pointer mr-4 hover:bg-stone-800 transition-colors duration-300">
+              <button
+                className="rounded-full flex items-center justify-center border border-stone-500 font-bold px-4 py-2 cursor-pointer mr-4 hover:bg-stone-800 transition-colors duration-300"
+                onClick={() => toggleEditProfile()}
+              >
                 Edit Profile
               </button>
+              {editProfile && (
+                <EditProfile
+                  toggleEditProfile={toggleEditProfile}
+                  handleSaveProfile={handleSaveProfile}
+                  bio={bio}
+                  name={name}
+                  profile_banner={profileOwner?.profile_banner ?? ""}
+                  profile_image={profileOwner?.profile_image ?? ""}
+                  key={profileOwner?.id}
+                  setBio={setBio}
+                  setName={setName}
+                />
+              )}
             </div>
             <div className="flex justify-between pb-4 ml-4 mr-4 mt-4 text-stone-500">
               <div className="flex items-center cursor-pointer hover:underline">
@@ -475,7 +511,7 @@ export const MeProfile = () => {
                             >
                               <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
                               <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
-                                {post.comments.length}
+                                {post.comments?.length}
                               </h2>
                             </div>
 
