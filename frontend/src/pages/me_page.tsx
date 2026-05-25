@@ -86,10 +86,8 @@ export const MeProfile = () => {
   };
 
   const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
-  const setSelectedPost = useSelectedPostStore(
-    (state) => state.setSelectedPost,
-  );
   const accessToken = useAuthStore((state) => state.accessToken);
+  const setSelectedPost = useSelectedPostStore((state) => state.setSelectedPost);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const navigate = useNavigate();
 
@@ -101,20 +99,43 @@ export const MeProfile = () => {
   const [edited, setEdited] = useState(false);
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+  const [profileBanner, setProfileBanner] = useState("");
+  const [profileImage, setProfileImage] = useState("");
+  const [profileBannerFile, setProfileBannerFile] = useState<File | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
 
   const handleSaveProfile = () => {
     try {
       setEdited((prev) => !prev);
-      console.log(edited);
+
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("bio", bio);
+
+      if (profileBannerFile) {
+        formData.append("profile_banner", profileBannerFile)
+      }
+      if (profileImageFile) {
+        formData.append("profile_image", profileImageFile)
+      }
+      api.patch(`users/${profileOwner?.id}/`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${accessToken}`}
+        }
+      )
+      setEditProfile((prev) => !prev);
     } catch (err) {
       console.log(err);
     }
   };
 
   const toggleEditProfile = () => {
-    setEditProfile((prev) => !prev);
     setName(profileOwner?.name ?? "");
     setBio(profileOwner?.bio ?? "");
+    setProfileBanner(profileOwner?.profile_banner ?? "");
+    setProfileImage(profileOwner?.profile_image ?? "");
+    setEditProfile((prev) => !prev);
   };
 
   const openClosePostMenu = (id: number) => {
@@ -320,7 +341,7 @@ export const MeProfile = () => {
     };
 
     handleInit();
-  }, [id, accessToken, setAccessToken]);
+  }, [id, accessToken, setAccessToken, edited]);
 
   return (
     <>
@@ -397,11 +418,14 @@ export const MeProfile = () => {
                   handleSaveProfile={handleSaveProfile}
                   bio={bio}
                   name={name}
-                  profile_banner={profileOwner?.profile_banner ?? ""}
-                  profile_image={profileOwner?.profile_image ?? ""}
-                  key={profileOwner?.id}
+                  profile_banner={profileBanner}
+                  profile_image={profileImage}
                   setBio={setBio}
                   setName={setName}
+                  setProfileBanner={setProfileBanner}
+                  setProfileImage={setProfileImage}
+                  setProfileBannerFile={setProfileBannerFile}
+                  setProfileImageFile={setProfileImageFile}
                 />
               )}
             </div>
