@@ -246,10 +246,19 @@ export const CommentCard = ({ post, onDelete }: commentProps) => {
         className="rounded-full w-[48px] h-[48px] cursor-pointer self-start"
         src={post.author.profile_image}
         alt="profile_picture"
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`/profile/${post.author.id}`)}}
       />
       <div className="flex flex-col ml-3 w-full">
         <div className="flex items-center">
-          <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
+          <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer hover:underline"
+          onClick={(e) => 
+          {
+            e.stopPropagation();
+            navigate(`/profile/${post.author.id}`)
+          }
+          }>
             {post.author.name}
           </h2>
           <h2 className="pr-1 text-stone-500 text-[16px]">

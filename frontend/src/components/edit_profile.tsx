@@ -66,7 +66,7 @@ export const EditProfile = ({
           />
           <img
             src={profile_banner}
-            className="max-w-[640px] rounded-sm w-full"
+            className="max-w-[640px] max-h-[320px] rounded-sm w-full"
             alt=""
           />
           <div className="flex items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 gap-6">

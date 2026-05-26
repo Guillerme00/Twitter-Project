@@ -10,6 +10,7 @@ import DateIcon from "../assets/icons/date.svg?react";
 import BornIcon from "../assets/icons/born.svg?react";
 import axios from "axios";
 
+
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/AuthStore";
@@ -32,6 +33,7 @@ type user = {
   profile_image: string;
   username: string;
   created_at: string;
+  is_following: boolean;
 };
 
 const api = axios.create({
@@ -85,6 +87,7 @@ export const MeProfile = () => {
     12: "December",
   };
 
+  const actualUserId = useAuthStore((state) => state.user?.id);
   const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
   const accessToken = useAuthStore((state) => state.accessToken);
   const setSelectedPost = useSelectedPostStore(
@@ -92,7 +95,7 @@ export const MeProfile = () => {
   );
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const navigate = useNavigate();
-
+  
   const [profileOwner, setProfileOwner] = useState<user | null>(null);
   const [userPosts, setUserPosts] = useState<PostProps[] | null>(null);
   const [actualUser, setActualUser] = useState<user | null>(null);
@@ -105,6 +108,9 @@ export const MeProfile = () => {
   const [profileImage, setProfileImage] = useState("");
   const [profileBannerFile, setProfileBannerFile] = useState<File | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [following, setFollowing] = useState(false);
+  
+  const isProfileOwner = profileOwner?.id === actualUserId
 
   const handleSaveProfile = () => {
     try {
@@ -128,6 +134,29 @@ export const MeProfile = () => {
       console.log(err);
     }
   };
+  
+  const follow = () => {
+    try {
+      api.post(`users/${profileOwner?.id}/follow/`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      )
+    } catch (err) {
+      console.log(err)
+    }
+  }
+  const unfollow = () => {
+    try {
+      api.post(`users/${profileOwner?.id}/unfollow/`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      )
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
   const toggleEditProfile = () => {
     setName(profileOwner?.name ?? "");
@@ -322,6 +351,7 @@ export const MeProfile = () => {
         const response = await api.get(`/users/${id}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        setFollowing(response.data.is_following)
         setProfileOwner(response.data);
 
         const response2 = await api.get(`/users/${id}/user_posts`, {
@@ -388,7 +418,7 @@ export const MeProfile = () => {
               <img
                 src={profileOwner?.profile_banner}
                 alt="profile banner"
-                className="w-full h-[250px]"
+                className="w-full h-[320px]"
               />
               <img
                 src={profileOwner?.profile_image}
@@ -405,12 +435,27 @@ export const MeProfile = () => {
                   @{profileOwner?.username}
                 </span>
               </div>
-              <button
-                className="rounded-full flex items-center justify-center border border-stone-500 font-bold px-4 py-2 cursor-pointer mr-4 hover:bg-stone-800 transition-colors duration-300"
-                onClick={() => toggleEditProfile()}
-              >
-                Edit Profile
-              </button>
+              {isProfileOwner &&
+                <button
+                  className="rounded-full flex items-center justify-center border border-stone-500 font-bold px-4 py-2 cursor-pointer mr-4 hover:bg-stone-800 transition-colors duration-300"
+                  onClick={() => toggleEditProfile()}
+                >
+                  Edit Profile
+                </button> 
+              }
+              {!isProfileOwner &&
+                <button
+                  className="rounded-full flex items-center justify-center border border-stone-500 font-bold px-4 py-2 cursor-pointer mr-4 hover:bg-stone-800 transition-colors duration-300"
+                  onClick={() => {
+                      if (following) {
+                        unfollow();
+                      } else {
+                        follow();
+                      }}}
+                >
+                  {following ? "Unfollow" : "Follow"}
+                </button> 
+              }
               {editProfile && (
                 <EditProfile
                   toggleEditProfile={toggleEditProfile}

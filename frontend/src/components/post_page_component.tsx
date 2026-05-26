@@ -157,7 +157,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
   };
 
   const handleDeleteComment = (id: number) => {
-    setPostComments((prev) => prev.filter((c) => c.id !== id));
+    setPostComments((prev) => prev?.filter((c) => c.id !== id));
   };
 
   const CalcTemp = (created_at: string) => {
@@ -286,9 +286,12 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
               className="ml-7 mr-3 rounded-full w-[48px] h-[48px] cursor-pointer self-start"
               src={post.author.profile_image}
               alt="profile_picture"
+              onClick={() => navigate(`/profile/${post.author.id}`)}
             />
             <div className="flex flex-col">
-              <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
+              <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer hover:underline"
+              onClick={() => navigate(`/profile/${post.author.id}`)}
+              >
                 {post.author.name}
               </h2>
               <h2 className="pr-1 text-stone-500 text-[16px]">
@@ -336,7 +339,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
               >
                 <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
                 <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
-                  {post.comments.length}
+                  {post.comments?.length}
                 </h2>
               </div>
 
@@ -457,7 +460,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
             </div>
           </div>
           <div className="w-full mt-4 border-b border-stone-800"></div>
-          {postComments.map(
+          {postComments?.map(
             (
               post_comment, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => (
