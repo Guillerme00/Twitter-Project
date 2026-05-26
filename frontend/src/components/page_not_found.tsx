@@ -4,7 +4,11 @@ import SettingsIcon from "../assets/icons/settings.svg?react";
 import XIcon from "../assets/icons/x_logo.svg?react";
 import { useNavigate } from "react-router-dom";
 
-export const PageNotFound = () => {
+type actualUser = {
+  id: number;
+};
+
+export const PageNotFound = ({ id }: actualUser) => {
   const navigate = useNavigate();
   return (
     <div className="bg-black h-screen text-[#E7E9EA] flex justify-center overflow-hidden">
@@ -13,15 +17,17 @@ export const PageNotFound = () => {
         <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
           <div className="top-0 py-2 mr-8">
             <XIcon className="fill-[#E7E9EA] w-8 h-8 ml-3 mb-4 cursor-pointer" />
-            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
-            onClick={() => navigate("/home")}
+            <button
+              className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+              onClick={() => navigate("/home")}
             >
               <HomeIcon className="fill-[#E7E9EA] w-8 h-8" />
-              <h2 className="text-xl">
-                Home
-              </h2>
+              <h2 className="text-xl">Home</h2>
             </button>
-            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
+            <button
+              className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+              onClick={() => navigate(`/profile/${id}`)}
+            >
               <MeIcon className="fill-[#E7E9EA] w-8 h-8" />
               <h2 className="text-xl">Me</h2>
             </button>

@@ -1,6 +1,8 @@
 from rest_framework import viewsets
 from users.models import UserModel
+from posts.models import PostModel
 from users.serializers import UserSerializer, UserUpdateSerializer
+from posts.serializers import PostSerializer
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -53,6 +55,14 @@ class UserViewSet(viewsets.ModelViewSet):
         return UserSerializer
 
     #decorators
+
+    @action(detail=True, methods=["get"])
+    def user_posts(self, request, pk=None):
+        posts = PostModel.objects.filter(author__id=pk, parent_post__isnull=True)
+        posts_serializered = PostSerializer(posts, many=True)
+        return Response(posts_serializered.data)
+
+
     @action(detail=True, methods=["post"])
     def follow(self, request, pk=None):
         user_to_follow = self.get_object()

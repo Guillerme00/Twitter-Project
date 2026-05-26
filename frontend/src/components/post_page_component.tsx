@@ -36,7 +36,7 @@ type ActualUser = {
   bio: string;
   followers_count: number;
   following_count: number;
-  bithday: string;
+  birthday: string;
 };
 
 const api = axios.create({
@@ -157,8 +157,8 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
   };
 
   const handleDeleteComment = (id: number) => {
-  setPostComments(prev => prev.filter(c => c.id !== id))
-  }
+    setPostComments((prev) => prev?.filter((c) => c.id !== id));
+  };
 
   const CalcTemp = (created_at: string) => {
     const now = new Date();
@@ -255,7 +255,10 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
               <HomeIcon className="fill-[#E7E9EA] w-8 h-8" />
               <h2 className="text-xl">Home</h2>
             </button>
-            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
+            <button
+              className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+              onClick={() => navigate(`/profile/${actualUser?.id}`)}
+            >
               <MeIcon className="fill-[#E7E9EA] w-8 h-8" />
               <h2 className="text-xl">Me</h2>
             </button>
@@ -283,9 +286,12 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
               className="ml-7 mr-3 rounded-full w-[48px] h-[48px] cursor-pointer self-start"
               src={post.author.profile_image}
               alt="profile_picture"
+              onClick={() => navigate(`/profile/${post.author.id}`)}
             />
             <div className="flex flex-col">
-              <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer">
+              <h2 className="pr-1 text-[#E7E9EA] text-[16px] cursor-pointer hover:underline"
+              onClick={() => navigate(`/profile/${post.author.id}`)}
+              >
                 {post.author.name}
               </h2>
               <h2 className="pr-1 text-stone-500 text-[16px]">
@@ -333,7 +339,7 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
               >
                 <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
                 <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
-                  {post.comments.length}
+                  {post.comments?.length}
                 </h2>
               </div>
 
@@ -454,11 +460,15 @@ export const PostPageComponent = ({ liked, retweeted, post }: commentProps) => {
             </div>
           </div>
           <div className="w-full mt-4 border-b border-stone-800"></div>
-          {postComments.map(
+          {postComments?.map(
             (
               post_comment, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => (
-              <CommentCard post={post_comment} onDelete={handleDeleteComment} key={post_comment.id} />
+              <CommentCard
+                post={post_comment}
+                onDelete={handleDeleteComment}
+                key={post_comment.id}
+              />
             ),
           )}
         </div>

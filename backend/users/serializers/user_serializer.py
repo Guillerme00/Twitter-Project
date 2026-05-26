@@ -5,9 +5,18 @@ from rest_framework.exceptions import ValidationError
 class UserSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
 
 
     # Defs
+    def get_is_following(self, obj):
+        request = self.context.get("request")
+
+        if not request or not request.user.is_authenticated:
+            return False
+
+        return obj.followers.filter(id=request.user.id).exists()
+
     def get_followers_count(self, obj):
         return obj.followers.count()
     
@@ -35,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
     # Classes
     class Meta:
         model = UserModel
-        fields = ["id","name", "email", "username", "profile_image", "profile_banner", "bio", "followers_count", "following_count", "password", "birthday"]
+        fields = ["id","name", "email", "username", "profile_image", "profile_banner", "bio", "followers_count", "is_following", "following_count", "password", "birthday", "created_at"]
         read_only_fields = ['created_at', 'id']
         extra_kwargs = {
             'password': {"write_only": True, "required":True}

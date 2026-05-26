@@ -53,11 +53,11 @@ export function PostPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [isRetweeted, setIsRetweeted] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const [actualUser, setActualUser] = useState(-1);
   useEffect(() => {
     const fetchPostData = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
 
         let token = accessToken;
 
@@ -81,9 +81,8 @@ export function PostPage() {
         setPost(postRes.data);
         setExist("found");
         setIsLiked(postRes.data.likes.includes(meRes.data.id));
-        setIsRetweeted(
-            postRes.data.retweets.includes(meRes.data.id)
-          );
+        setIsRetweeted(postRes.data.retweets.includes(meRes.data.id));
+        setActualUser(meRes.data.id);
       } catch (err) {
         console.log(err);
         setExist("notfound");
@@ -101,7 +100,7 @@ export function PostPage() {
       {loading ? (
         false
       ) : exist === "notfound" || post == null ? (
-        <PageNotFound />
+        <PageNotFound id={actualUser} />
       ) : (
         <PostPageComponent
           post={post}

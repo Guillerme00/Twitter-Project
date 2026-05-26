@@ -26,7 +26,7 @@ type ActualUser = {
   bio: string;
   followers_count: number;
   following_count: number;
-  bithday: string;
+  birthday: string;
 };
 
 const api = axios.create({
@@ -500,7 +500,7 @@ export function Feed() {
                         >
                           <CommentIcon className="fill-stone-500 cursor-pointer group-hover:fill-blue-500 w-6 h-6 transition-colors duration-300" />
                           <h2 className="text-stone-500 ml-1 group-hover:text-blue-500 transition-colors duration-300">
-                            {post.comments.length}
+                            {post.comments?.length}
                           </h2>
                         </div>
 
