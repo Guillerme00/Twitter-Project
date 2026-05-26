@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./store/AuthStore";
 import { Feed } from "./pages/feed";
 import { PostPage } from "./pages/post_page";
+import { SettingsPage } from "./pages/settings";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = useAuthStore((state) => state.accessToken);
@@ -43,6 +44,14 @@ function App() {
           element={
             <PrivateRoute>
               <MeProfile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/settings/"
+          element={
+            <PrivateRoute>
+              <SettingsPage />
             </PrivateRoute>
           }
         />

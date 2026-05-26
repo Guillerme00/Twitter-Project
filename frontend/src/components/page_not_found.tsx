@@ -31,7 +31,8 @@ export const PageNotFound = ({ id }: actualUser) => {
               <MeIcon className="fill-[#E7E9EA] w-8 h-8" />
               <h2 className="text-xl">Me</h2>
             </button>
-            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
+            <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+            onClick={() => navigate("/settings")}>
               <SettingsIcon className="fill-[#E7E9EA] w-8 h-8" />
               <h2 className="text-xl">Settings</h2>
             </button>
