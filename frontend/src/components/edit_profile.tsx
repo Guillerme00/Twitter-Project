@@ -1,5 +1,4 @@
 import AddPhoto from "../assets/icons/addphoto2.svg?react";
-import Close from "../assets/icons/close.svg?react";
 
 type editProps = {
   toggleEditProfile: () => void;
@@ -28,7 +27,7 @@ export const EditProfile = ({
   setProfileBanner,
   setProfileImage,
   setProfileBannerFile,
-  setProfileImageFile
+  setProfileImageFile,
 }: editProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
@@ -51,6 +50,20 @@ export const EditProfile = ({
           </button>
         </div>
         <div className="mt-4 relative">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            id="bannerInput"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+
+              if (file) {
+                setProfileBannerFile(file);
+                setProfileBanner(URL.createObjectURL(file));
+              }
+            }}
+          />
           <img
             src={profile_banner}
             className="max-w-[640px] rounded-sm w-full"
@@ -59,23 +72,41 @@ export const EditProfile = ({
           <div className="flex items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 gap-6">
             <button
               className="text-[20px] hover:bg-black/50 bg-black/75 p-2 w-12 h-12 flex items-center justify-center rounded-full font-bold cursor-pointer transition-colors duration-300"
-              onClick={() => toggleEditProfile()}
+              onClick={() => document.getElementById("bannerInput")?.click()}
             >
-              <Close className="w-6 h-6 pointer-events-none"/>
-            </button>
-            <button
-              className="text-[20px] hover:bg-black/50 bg-black/75 p-2 w-12 h-12 flex items-center justify-center rounded-full font-bold cursor-pointer transition-colors duration-300"
-              onClick={() => toggleEditProfile()}
-            >
-              <AddPhoto className="w-6 h-6 pointer-events-none"/>
+              <AddPhoto className="w-6 h-6 pointer-events-none" />
             </button>
           </div>
         </div>
         <div className="flex items-center mt-4">
-          <img
-            src={profile_image}
-            className="rounded-full overflow-hidden w-32 h-32"
-          />
+          <div className="relative">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              id="imageInput"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+
+                if (file) {
+                  setProfileImageFile(file);
+                  setProfileImage(URL.createObjectURL(file));
+                }
+              }}
+            />
+            <img
+              src={profile_image}
+              className="rounded-full overflow-hidden w-32 h-32"
+            />
+            <div className="flex items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 gap-6">
+              <button
+                className="text-[20px] hover:bg-black/50 bg-black/75 p-2 w-12 h-12 flex items-center justify-center rounded-full font-bold cursor-pointer transition-colors duration-300"
+                onClick={() => document.getElementById("imageInput")?.click()}
+              >
+                <AddPhoto className="w-6 h-6 pointer-events-none" />
+              </button>
+            </div>
+          </div>
           <div className="border border-stone-700 rounded-md ml-4 px-3 py-2 bg-[#0b0b0b] flex-1">
             <p className="text-stone-500 text-sm">Name</p>
 

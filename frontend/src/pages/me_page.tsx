@@ -87,7 +87,9 @@ export const MeProfile = () => {
 
   const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
   const accessToken = useAuthStore((state) => state.accessToken);
-  const setSelectedPost = useSelectedPostStore((state) => state.setSelectedPost);
+  const setSelectedPost = useSelectedPostStore(
+    (state) => state.setSelectedPost,
+  );
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const navigate = useNavigate();
 
@@ -113,17 +115,14 @@ export const MeProfile = () => {
       formData.append("bio", bio);
 
       if (profileBannerFile) {
-        formData.append("profile_banner", profileBannerFile)
+        formData.append("profile_banner", profileBannerFile);
       }
       if (profileImageFile) {
-        formData.append("profile_image", profileImageFile)
+        formData.append("profile_image", profileImageFile);
       }
-      api.patch(`users/${profileOwner?.id}/`,
-        formData,
-        {
-          headers: { Authorization: `Bearer ${accessToken}`}
-        }
-      )
+      api.patch(`users/${profileOwner?.id}/`, formData, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       setEditProfile((prev) => !prev);
     } catch (err) {
       console.log(err);
@@ -394,10 +393,10 @@ export const MeProfile = () => {
               <img
                 src={profileOwner?.profile_image}
                 alt="profile image"
-                className="w-28 h-28 rounded-full absolute bottom-4 left-8 border-black"
+                className="w-28 h-28 rounded-full absolute bottom-4 left-8 border-black/35 border-[4px]"
               />
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center pt-8">
               <div className="ml-4 mt-2 flex flex-col gap-0">
                 <h1 className="text-[28px] font-bold leading-none m-0 p-0">
                   {profileOwner?.name}
