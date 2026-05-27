@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from posts.models import PostModel
 from posts.serializers import FeedSerializer
-from django.db.models import Q
 
 class FeedView(APIView):
     permission_classes = [IsAuthenticated]
@@ -28,11 +27,10 @@ class FeedView(APIView):
         posts = None
         if feed_type == "following":
             following_users = user.following.all()
-            posts = PostModel.objects.filter(
-                Q(author__in=following_users))
+            posts = PostModel.objects.filter(author__in=following_users).select_related("author").prefetch_related("likes").order_by("-created_at")
             
         elif feed_type == "for_you":
-            posts = PostModel.objects.all().order_by("-created_at")
+            posts = PostModel.objects.all().select_related("author").prefetch_related("likes").order_by("-created_at")
         else:
             return Response(
                 {"error": "Not found"},

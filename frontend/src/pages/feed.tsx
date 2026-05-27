@@ -1,8 +1,11 @@
-import axios from "axios";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../store/AuthStore";
 import { useNavigate } from "react-router-dom";
+import { CommentInPost } from "../components/comment";
+import { useSelectedPostStore } from "../store/SelectedPostStore";
+import { useSearchParams } from "react-router-dom";
 
+import axios from "axios";
 import HomeIcon from "../assets/icons/home.svg?react";
 import MeIcon from "../assets/icons/me.svg?react";
 import SettingsIcon from "../assets/icons/settings.svg?react";
@@ -10,9 +13,6 @@ import XIcon from "../assets/icons/x_logo.svg?react";
 import CommentIcon from "../assets/icons/comment-alt.svg?react";
 import LikeIcon from "../assets/icons/heart.svg?react";
 import RetweetIcon from "../assets/icons/retweet.svg?react";
-
-import { CommentInPost } from "../components/comment";
-import { useSelectedPostStore } from "../store/SelectedPostStore";
 
 import type { PostProps } from "../types/postType";
 
@@ -67,12 +67,15 @@ api.interceptors.response.use(
 export function Feed() {
   //consts
   const accessToken = useAuthStore((state) => state.accessToken);
-  const setAccessToken = useAuthStore((state) => state.setAccessToken);
-  const navigate = useNavigate();
-  const setSelectedPost = useSelectedPostStore(
-    (state) => state.setSelectedPost,
-  );
   const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
+  const setSelectedPost = useSelectedPostStore((state) => state.setSelectedPost,);
+  const navigate = useNavigate();
+
+
+  const [searchParams] = useSearchParams();
+  const feedType = searchParams.get("feed")
+  const isFollowingFeed = feedType === "following";
 
   //states
   const [actualUser, setActualUser] = useState<ActualUser | null>(null);
@@ -141,8 +144,10 @@ export function Feed() {
           token = res.data.access;
           setAccessToken(res.data.access);
         }
-
-        const response = await api.get("/posts/", {
+        
+        const response = await api.get("/posts/",
+        {
+          params: {feed: isFollowingFeed ? "following" : "for_you"},
           headers: { Authorization: `Bearer ${token}` },
         });
         setPosts(response.data.results);
@@ -158,7 +163,7 @@ export function Feed() {
     };
 
     handleInit();
-  }, [accessToken, navigate, setAccessToken]);
+  }, [accessToken, navigate, setAccessToken, isFollowingFeed ]);
 
   useEffect(() => {
     if (SelectedPost === null) {
@@ -182,6 +187,7 @@ export function Feed() {
         },
       });
       const response = await api.get("/posts/", {
+        params: { feed: isFollowingFeed ? "following" : "for_you" },
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
