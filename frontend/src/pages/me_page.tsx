@@ -476,17 +476,21 @@ export const MeProfile = () => {
               )}
             </div>
             <div className="flex justify-between pb-4 ml-4 mr-4 mt-4 text-stone-500">
-              <div className="flex items-center cursor-pointer hover:underline">
-                <span className="text-[#E7E9EA] mr-1">
-                  {profileOwner?.following_count}
-                </span>
-                <span>Following</span>
-              </div>
-              <div className="flex items-center cursor-pointer hover:underline">
+              <div className="flex items-center cursor-pointer hover:underline"
+              onClick={() => navigate(`/profile/${id}/followers`)}
+              >
                 <span className="text-[#E7E9EA] mr-1">
                   {profileOwner?.followers_count}
                 </span>
                 <span>Followers</span>
+              </div>
+              <div className="flex items-center cursor-pointer hover:underline"
+              onClick={() => navigate(`/profile/${id}/following`)}
+              >
+                <span className="text-[#E7E9EA] mr-1">
+                  {profileOwner?.following_count}
+                </span>
+                <span>Following</span>
               </div>
               <div className="flex items-center">
                 <BornIcon className="fill-stone-500 h-5 w-5" />

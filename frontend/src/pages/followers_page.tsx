@@ -70,7 +70,7 @@ api.interceptors.response.use(
   },
 );
 
-export const FollowingPage = () => {
+export const FollowersPage = () => {
   const { id } = useParams();
 
   const actualUser = useAuthStore((state) => state.user?.id);
@@ -125,7 +125,6 @@ const unfollow = async (userId: number) => {
     console.log(err);
   }
 };
-
   useEffect(() => {
     const handleInit = async () => {
       try {
@@ -144,7 +143,7 @@ const unfollow = async (userId: number) => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfileUser(response.data);
-        setFollowing(response.data.following);
+        setFollowing(response.data.followers);
       } catch (err) {
         console.log(err);
       }
@@ -201,14 +200,16 @@ const unfollow = async (userId: number) => {
             </div>
           </div>
           <div className="grid grid-cols-2 border-b border-stone-800">
-            <div className="p-4 cursor-pointer text-stone-500 font-bold text-center hover:bg-stone-900"
-            onClick={() => navigate(`/profile/${id}/followers`)}>
-              Followers
-            </div>
             <div className="p-4 cursor-pointer font-bold text-center hover:bg-stone-900">
-              <div className="inline-block">
+                <div className="inline-block">
+                    Followers
+                    <div className="h-1 bg-blue-400 rounded-full mt-1" />
+            </div>
+            </div>
+            <div className="p-4 cursor-pointer text-stone-500 font-bold text-center hover:bg-stone-900"
+            onClick={() => navigate(`/profile/${id}/following`)}>
+              <div>
                 Following
-                <div className="h-1 bg-blue-400 rounded-full mt-1" />
               </div>
             </div>
           </div>

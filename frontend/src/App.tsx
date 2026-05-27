@@ -8,6 +8,7 @@ import { Feed } from "./pages/feed";
 import { PostPage } from "./pages/post_page";
 import { SettingsPage } from "./pages/settings";
 import { FollowingPage } from "./pages/following_page";
+import { FollowersPage } from "./pages/followers_page";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = useAuthStore((state) => state.accessToken);
@@ -53,6 +54,14 @@ function App() {
           element={
             <PrivateRoute>
               <FollowingPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile/:id/followers"
+          element={
+            <PrivateRoute>
+              <FollowersPage />
             </PrivateRoute>
           }
         />
