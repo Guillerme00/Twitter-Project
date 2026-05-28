@@ -6,6 +6,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./store/AuthStore";
 import { Feed } from "./pages/feed";
 import { PostPage } from "./pages/post_page";
+import { SettingsPage } from "./pages/settings";
+import { FollowingPage } from "./pages/following_page";
+import { FollowersPage } from "./pages/followers_page";
+import { SearchPostPage } from "./pages/post_search_page";
+import { SearchUserPage } from "./pages/users_search_page copy";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = useAuthStore((state) => state.accessToken);
@@ -43,6 +48,46 @@ function App() {
           element={
             <PrivateRoute>
               <MeProfile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile/:id/following"
+          element={
+            <PrivateRoute>
+              <FollowingPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile/:id/followers"
+          element={
+            <PrivateRoute>
+              <FollowersPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/settings/"
+          element={
+            <PrivateRoute>
+              <SettingsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/posts/search/"
+          element={
+            <PrivateRoute>
+              <SearchPostPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/users/search/"
+          element={
+            <PrivateRoute>
+              <SearchUserPage />
             </PrivateRoute>
           }
         />

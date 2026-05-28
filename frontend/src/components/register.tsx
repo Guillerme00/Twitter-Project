@@ -40,6 +40,7 @@ export function Register() {
   const [year, setYear] = useState("");
   const [pass1, setPass1] = useState("");
   const [pass2, setPass2] = useState("");
+  const [usernameExist, setUsernameExist] = useState(false);
 
   const [nameValid, setNameValid] = useState("untouched");
   const [usernameValid, setUsernameValid] = useState("untouched");
@@ -175,8 +176,10 @@ export function Register() {
       setInError("ok");
       redirecting();
     } catch (error) {
-      const err = error as AxiosError;
-      console.log(err.response?.data);
+       const err = error as AxiosError<{ username?: string[] }>;
+      if (err.response?.data?.username) {
+        setUsernameExist(true)
+      }
     }
   };
 
@@ -241,6 +244,7 @@ export function Register() {
             onChange={(e) => {
               setUsername(e.target.value);
               validUsername(e.target.value);
+              setUsernameExist(false);
             }}
             required
             type="text"
@@ -249,6 +253,11 @@ export function Register() {
             placeholder="Username"
             className="text-white placeholder-stone-700 p-4 mt-4 text-[20px] mb-1 border-stone-700 border-2 rounded-xs w-full"
           />
+          {usernameExist  && (
+            <h1 className="text-red-500">
+              Error, Username already exist.
+            </h1>
+          )}
           {usernameValid === "invalid" && (
             <h1 className="text-red-500">
               Error, Username must have between 4 and 16 characters

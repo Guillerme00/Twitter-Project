@@ -10,7 +10,6 @@ import DateIcon from "../assets/icons/date.svg?react";
 import BornIcon from "../assets/icons/born.svg?react";
 import axios from "axios";
 
-
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/AuthStore";
@@ -95,7 +94,7 @@ export const MeProfile = () => {
   );
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const navigate = useNavigate();
-  
+
   const [profileOwner, setProfileOwner] = useState<user | null>(null);
   const [userPosts, setUserPosts] = useState<PostProps[] | null>(null);
   const [actualUser, setActualUser] = useState<user | null>(null);
@@ -109,8 +108,10 @@ export const MeProfile = () => {
   const [profileBannerFile, setProfileBannerFile] = useState<File | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [following, setFollowing] = useState(false);
-  
-  const isProfileOwner = profileOwner?.id === actualUserId
+  const [searching, setSearching] = useState(false);
+  const [searchField, setSearchField] = useState("");
+
+  const isProfileOwner = profileOwner?.id === actualUserId;
 
   const handleSaveProfile = () => {
     try {
@@ -134,29 +135,25 @@ export const MeProfile = () => {
       console.log(err);
     }
   };
-  
+
   const follow = () => {
     try {
-      api.post(`users/${profileOwner?.id}/follow/`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      )
+      api.post(`users/${profileOwner?.id}/follow/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
-  }
+  };
   const unfollow = () => {
     try {
-      api.post(`users/${profileOwner?.id}/unfollow/`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      )
+      api.post(`users/${profileOwner?.id}/unfollow/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
-  }
+  };
 
   const toggleEditProfile = () => {
     setName(profileOwner?.name ?? "");
@@ -351,7 +348,7 @@ export const MeProfile = () => {
         const response = await api.get(`/users/${id}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setFollowing(response.data.is_following)
+        setFollowing(response.data.is_following);
         setProfileOwner(response.data);
 
         const response2 = await api.get(`/users/${id}/user_posts`, {
@@ -374,7 +371,7 @@ export const MeProfile = () => {
 
   return (
     <>
-      <div className="bg-black h-screen text-[#E7E9EA] flex justify-center">
+      <div className="bg-black h-screen text-[#E7E9EA] flex justify-center"onClick={() => setSearching(false)}>
         <div className="flex w-full max-w-[1300px] overflow-hidden">
           {/* Left Side */}
           <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
@@ -391,7 +388,10 @@ export const MeProfile = () => {
                 <MeIcon className="fill-[#E7E9EA] w-8 h-8" />
                 <h2 className="text-xl">Me</h2>
               </button>
-              <button className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300">
+              <button
+                className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+                onClick={() => navigate("/settings")}
+              >
                 <SettingsIcon className="fill-[#E7E9EA] w-8 h-8" />
                 <h2 className="text-xl">Settings</h2>
               </button>
@@ -434,28 +434,32 @@ export const MeProfile = () => {
                 <span className="text-[20px] text-stone-500 leading-none m-0 p-0">
                   @{profileOwner?.username}
                 </span>
+                <span className="mt-3 font-[#E7E9EA] text-[20px]">
+                  {profileOwner?.bio}
+                </span>
               </div>
-              {isProfileOwner &&
+              {isProfileOwner && (
                 <button
                   className="rounded-full flex items-center justify-center border border-stone-500 font-bold px-4 py-2 cursor-pointer mr-4 hover:bg-stone-800 transition-colors duration-300"
                   onClick={() => toggleEditProfile()}
                 >
                   Edit Profile
-                </button> 
-              }
-              {!isProfileOwner &&
+                </button>
+              )}
+              {!isProfileOwner && (
                 <button
                   className="rounded-full flex items-center justify-center border border-stone-500 font-bold px-4 py-2 cursor-pointer mr-4 hover:bg-stone-800 transition-colors duration-300"
                   onClick={() => {
-                      if (following) {
-                        unfollow();
-                      } else {
-                        follow();
-                      }}}
+                    if (following) {
+                      unfollow();
+                    } else {
+                      follow();
+                    }
+                  }}
                 >
                   {following ? "Unfollow" : "Follow"}
-                </button> 
-              }
+                </button>
+              )}
               {editProfile && (
                 <EditProfile
                   toggleEditProfile={toggleEditProfile}
@@ -474,17 +478,21 @@ export const MeProfile = () => {
               )}
             </div>
             <div className="flex justify-between pb-4 ml-4 mr-4 mt-4 text-stone-500">
-              <div className="flex items-center cursor-pointer hover:underline">
-                <span className="text-[#E7E9EA] mr-1">
-                  {profileOwner?.following_count}
-                </span>
-                <span>Following</span>
-              </div>
-              <div className="flex items-center cursor-pointer hover:underline">
+              <div className="flex items-center cursor-pointer hover:underline"
+              onClick={() => navigate(`/profile/${id}/followers`)}
+              >
                 <span className="text-[#E7E9EA] mr-1">
                   {profileOwner?.followers_count}
                 </span>
                 <span>Followers</span>
+              </div>
+              <div className="flex items-center cursor-pointer hover:underline"
+              onClick={() => navigate(`/profile/${id}/following`)}
+              >
+                <span className="text-[#E7E9EA] mr-1">
+                  {profileOwner?.following_count}
+                </span>
+                <span>Following</span>
               </div>
               <div className="flex items-center">
                 <BornIcon className="fill-stone-500 h-5 w-5" />
@@ -808,7 +816,7 @@ export const MeProfile = () => {
               {actualUser && accessToken && SelectedPost ? (
                 <CommentInPost
                   post={SelectedPost}
-                  user={actualUser}
+                  user={actualUser.id}
                   token={accessToken}
                 />
               ) : (
@@ -820,12 +828,25 @@ export const MeProfile = () => {
           {/* right side */}
           <div className="w-[420px] px-4 sticky top-0 h-screen overflow-y-auto">
             <div className="top-0 pt-2">
-              <div className="bg-zinc-900 border border-stone-800 rounded-full px-4 py-2 focus-within:border-blue-500">
+              <div className="bg-zinc-900 border border-stone-800 rounded-full px-4 py-2 focus-within:border-blue-500 relative">
                 <input
+                onClick={(e) => {
+                  setSearching(true)
+                  e.stopPropagation()
+                }}
+                onChange={(e) => setSearchField(e.target.value)}
+                value={searchField}
                   type="text"
                   placeholder="Search"
                   className="bg-transparent outline-none w-full text-sm text-white placeholder-gray-400"
                 />
+                {
+                searching &&
+                <div className="p-2 flex flex-col absolute top-full bg-[#16181C] left-0 w-full flex rounded-xl shadow-[0_0_20px_4px_rgba(255,255,255,0.08)]">
+                  <span className="p-1 font-bold hover:underline rounded-full cursor-pointer" onClick={() => navigate(`/users/search/?q=${searchField}`)}>Search "{searchField}" in Users</span>
+                  <span className="p-1 font-bold hover:underline rounded-full cursor-pointer" onClick={() => navigate(`/posts/search/?q=${searchField}`)}>Search "{searchField}" in Posts</span>
+                </div>
+              }
               </div>
 
               <div className="bg-zinc-900 border border-stone-800 rounded-xl mt-4 p-4">

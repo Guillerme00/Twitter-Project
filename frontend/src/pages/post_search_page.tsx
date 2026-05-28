@@ -1,11 +1,5 @@
-import { useState, useEffect } from "react";
-import { useAuthStore } from "../store/AuthStore";
-import { useNavigate } from "react-router-dom";
-import { CommentInPost } from "../components/comment";
-import { useSelectedPostStore } from "../store/SelectedPostStore";
-import { useSearchParams } from "react-router-dom";
-
 import axios from "axios";
+import BackIcon from "../assets/icons/arrow.svg?react";
 import HomeIcon from "../assets/icons/home.svg?react";
 import MeIcon from "../assets/icons/me.svg?react";
 import SettingsIcon from "../assets/icons/settings.svg?react";
@@ -14,26 +8,17 @@ import CommentIcon from "../assets/icons/comment-alt.svg?react";
 import LikeIcon from "../assets/icons/heart.svg?react";
 import RetweetIcon from "../assets/icons/retweet.svg?react";
 
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuthStore } from "../store/AuthStore";
+import { useEffect, useState } from "react";
+import { CommentInPost } from "../components/comment";
 import type { PostProps } from "../types/postType";
-
-type ActualUser = {
-  id: number;
-  name: string;
-  email: string;
-  username: string;
-  profile_image: string;
-  profile_banner: string;
-  bio: string;
-  followers_count: number;
-  following_count: number;
-  birthday: string;
-};
+import { useSelectedPostStore } from "../store/SelectedPostStore";
 
 const api = axios.create({
   baseURL: "http://localhost:8000/api",
   withCredentials: true,
 });
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -64,37 +49,24 @@ api.interceptors.response.use(
   },
 );
 
-export function Feed() {
-  //consts
-  const accessToken = useAuthStore((state) => state.accessToken);
+export const SearchPostPage = () => {
+  const [searchParams] = useSearchParams();
+  
+  const q = searchParams.get("q");
+  const actualUser = useAuthStore((state) => state.user?.id);
+
+  const navigate = useNavigate();
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
   const setSelectedPost = useSelectedPostStore(
     (state) => state.setSelectedPost,
   );
-  const navigate = useNavigate();
 
-  const [searchParams] = useSearchParams();
-  const feedType = searchParams.get("feed");
-  const isFollowingFeed = feedType === "following";
-
-  //states
-  const [actualUser, setActualUser] = useState<ActualUser | null>(null);
-  const [postMessage, setPostMessage] = useState("");
   const [Posts, setPosts] = useState<PostProps[]>([]);
-  const [image, setImage] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [openedPostMenu, setOpenedPostMenu] = useState<number | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchField, setSearchField] = useState("");
-
-  //functions
-  const validPost = postMessage.length >= 1 && postMessage.length <= 500;
-
-  const clearPostImage = () => {
-    setImage(null);
-    setPreview(null);
-  };
+  const [openedPostMenu, setOpenedPostMenu] = useState<number | null>(null);
 
   const openClosePostMenu = (id: number) => {
     if (openedPostMenu !== null && openedPostMenu === id) {
@@ -132,7 +104,116 @@ export function Feed() {
     }
   };
 
-  // UseEffects
+  const retweet = async (id: number, isRetweetPost: boolean) => {
+      if (!actualUser) return;
+  
+      let previousPosts: PostProps[] = [];
+  
+      setPosts((prevPosts) => {
+        previousPosts = prevPosts;
+  
+        return prevPosts
+          .map((post) => {
+            if (isRetweetPost) {
+              if (post.retweet_post?.id !== id) return post;
+  
+              const alreadyRetweeted = post.retweet_post.retweets.includes(
+                actualUser,
+              );
+  
+              return {
+                ...post,
+                retweet_post: {
+                  ...post.retweet_post,
+                  retweets: alreadyRetweeted
+                    ? post.retweet_post.retweets.filter(
+                        (uid) => uid !== actualUser,
+                      )
+                    : [...post.retweet_post.retweets, actualUser],
+                },
+              };
+            } else {
+              if (post.id !== id) return post;
+  
+              const alreadyRetweeted = post.retweets.includes(actualUser);
+  
+              return {
+                ...post,
+                retweets: alreadyRetweeted
+                  ? post.retweets.filter((uid) => uid !== actualUser)
+                  : [...post.retweets, actualUser],
+              };
+            }
+          })
+          .filter((post): post is PostProps => post !== null);
+      });
+  
+      try {
+        await api.post(
+          `/posts/${id}/retweet/`,
+          {},
+          { headers: { Authorization: `Bearer ${accessToken}` } },
+        );
+      } catch (err) {
+        setPosts(previousPosts);
+        console.log(err);
+      }
+    };
+  
+    const like = async (id: number, isRetweetPost: boolean) => {
+      if (!actualUser) return;
+  
+      let previousPosts: PostProps[] = [];
+  
+      setPosts((prevPosts) => {
+        previousPosts = prevPosts;
+  
+        return prevPosts.map((post) => {
+          if (isRetweetPost) {
+            if (post.retweet_post?.id !== id) return post;
+  
+            const alreadyLiked = post.retweet_post.likes.includes(actualUser);
+  
+            return {
+              ...post,
+              retweet_post: {
+                ...post.retweet_post,
+                likes: alreadyLiked
+                  ? post.retweet_post.likes.filter((uid) => uid !== actualUser)
+                  : [...post.retweet_post.likes, actualUser],
+              },
+            };
+          } else {
+            if (post.id !== id) return post;
+  
+            const alreadyLiked = post.likes.includes(actualUser);
+  
+            return {
+              ...post,
+              likes: alreadyLiked
+                ? post.likes.filter((uid) => uid !== actualUser)
+                : [...post.likes, actualUser],
+            };
+          }
+        });
+      });
+  
+      try {
+        await api.post(
+          `/posts/${id}/like_unlike_post/`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+      } catch (err) {
+        setPosts(previousPosts);
+        console.log(err);
+      }
+    };
+
   useEffect(() => {
     const handleInit = async () => {
       try {
@@ -147,179 +228,21 @@ export function Feed() {
           token = res.data.access;
           setAccessToken(res.data.access);
         }
-
-        const response = await api.get("/feed/", {
-          params: { feed: isFollowingFeed ? "following" : "for_you" },
+        const response = await api.get(`/posts/search_posts/?q=${q}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (isFollowingFeed) {
-          setPosts(response.data);
-        } else {
-          setPosts(response.data);
-        }
-
-        const actual_user_response = await api.get("/users/me/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setActualUser(actual_user_response.data);
+        console.log(response.data)
+        setPosts(response.data);
       } catch (err) {
         console.log(err);
-        navigate("/signin");
       }
     };
-
     handleInit();
-  }, [accessToken, navigate, setAccessToken, isFollowingFeed]);
-
-  useEffect(() => {
-    if (SelectedPost === null) {
-      document.body.style.overflow = "auto";
-    }
-  }, [SelectedPost]);
-
-  //functions
-  const handlePost = async () => {
-    const formData = new FormData();
-    if (image) {
-      formData.append("post_body", postMessage);
-      formData.append("files", image);
-    } else {
-      formData.append("post_body", postMessage);
-    }
-    try {
-      await api.post("/posts/", formData, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const response = await api.get("/posts/", {
-        params: { feed: isFollowingFeed ? "following" : "for_you" },
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      setPosts(response.data.results);
-      setImage(null);
-      setPreview(null);
-      setPostMessage("");
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const retweet = async (id: number, isRetweetPost: boolean) => {
-    if (!actualUser) return;
-
-    let previousPosts: PostProps[] = [];
-
-    setPosts((prevPosts) => {
-      previousPosts = prevPosts;
-
-      return prevPosts
-        .map((post) => {
-          if (isRetweetPost) {
-            if (post.retweet_post?.id !== id) return post;
-
-            const alreadyRetweeted = post.retweet_post.retweets.includes(
-              actualUser.id,
-            );
-
-            return {
-              ...post,
-              retweet_post: {
-                ...post.retweet_post,
-                retweets: alreadyRetweeted
-                  ? post.retweet_post.retweets.filter(
-                      (uid) => uid !== actualUser.id,
-                    )
-                  : [...post.retweet_post.retweets, actualUser.id],
-              },
-            };
-          } else {
-            if (post.id !== id) return post;
-
-            const alreadyRetweeted = post.retweets.includes(actualUser.id);
-
-            return {
-              ...post,
-              retweets: alreadyRetweeted
-                ? post.retweets.filter((uid) => uid !== actualUser.id)
-                : [...post.retweets, actualUser.id],
-            };
-          }
-        })
-        .filter((post): post is PostProps => post !== null);
-    });
-
-    try {
-      await api.post(
-        `/posts/${id}/retweet/`,
-        {},
-        { headers: { Authorization: `Bearer ${accessToken}` } },
-      );
-    } catch (err) {
-      setPosts(previousPosts);
-      console.log(err);
-    }
-  };
-
-  const like = async (id: number, isRetweetPost: boolean) => {
-    if (!actualUser) return;
-
-    let previousPosts: PostProps[] = [];
-
-    setPosts((prevPosts) => {
-      previousPosts = prevPosts;
-
-      return prevPosts.map((post) => {
-        if (isRetweetPost) {
-          if (post.retweet_post?.id !== id) return post;
-
-          const alreadyLiked = post.retweet_post.likes.includes(actualUser.id);
-
-          return {
-            ...post,
-            retweet_post: {
-              ...post.retweet_post,
-              likes: alreadyLiked
-                ? post.retweet_post.likes.filter((uid) => uid !== actualUser.id)
-                : [...post.retweet_post.likes, actualUser.id],
-            },
-          };
-        } else {
-          if (post.id !== id) return post;
-
-          const alreadyLiked = post.likes.includes(actualUser.id);
-
-          return {
-            ...post,
-            likes: alreadyLiked
-              ? post.likes.filter((uid) => uid !== actualUser.id)
-              : [...post.likes, actualUser.id],
-          };
-        }
-      });
-    });
-
-    try {
-      await api.post(
-        `/posts/${id}/like_unlike_post/`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-    } catch (err) {
-      setPosts(previousPosts);
-      console.log(err);
-    }
-  };
-
-  // Body
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
   return (
-    <div className="bg-black h-screen text-[#E7E9EA] flex justify-center" onClick={() => setSearching(false)}>
-      <div className="flex w-full max-w-[1300px] overflow-hidden">
+    <div className="bg-black h-screen text-[#E7E9EA] flex justify-center overflow-hidden"onClick={() => setSearching(false)}>
+      <div className="flex w-full max-w-[1300px]">
         {/* Left Side */}
         <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
           <div className="top-0 py-2 mr-8">
@@ -333,7 +256,7 @@ export function Feed() {
             </button>
             <button
               className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
-              onClick={() => navigate(`/profile/${actualUser?.id}`)}
+              onClick={() => navigate(`/profile/${actualUser}`)}
             >
               <MeIcon className="fill-[#E7E9EA] w-8 h-8" />
               <h2 className="text-xl">Me</h2>
@@ -349,120 +272,26 @@ export function Feed() {
         </div>
 
         {/* mid side */}
-        <div className="border-r border-stone-800 flex-1 w-full max-w-[800px] overflow-y-auto no-scrollbar h-screen">
-          {isFollowingFeed ? (
-            <div className="grid grid-cols-2 border-b border-stone-800">
-              <div
-                className="p-4 cursor-pointer text-stone-500 font-bold text-center hover:bg-stone-900"
-                onClick={() => navigate("/home")}
-              >
-                For you
-              </div>
-              <div className="p-4 cursor-pointer font-bold text-center hover:bg-stone-900">
-                <div className="inline-block">
-                  Following
-                  <div className="h-1 bg-blue-400 rounded-full mt-1" />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 border-b border-stone-800">
-              <div className="p-4 cursor-pointer font-bold text-center hover:bg-stone-900">
-                <div className="inline-block">
-                  For you
-                  <div className="h-1 bg-blue-400 rounded-full mt-1" />
-                </div>
-              </div>
-              <div
-                className="p-4 cursor-pointer text-stone-500 font-bold text-center hover:bg-stone-900"
-                onClick={() => navigate("/home?feed=following")}
-              >
-                Following
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-col p-4 border-b border-stone-800">
-            <div className="flex flex-col">
-              <div className="flex">
-                <img
-                  src={actualUser?.profile_image}
-                  alt="profile_picture"
-                  className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
-                />
-                <textarea
-                  placeholder="What's happening?"
-                  className="no-scrollbar bg-transparent outline-none ml-4 text-[20px] w-full text-sm text-[#E7E9EA] placeholder-stone-500 resize-none border-b border-stone-800"
-                  onChange={(s) => {
-                    setPostMessage(s.target.value);
-                    s.target.style.height = "auto";
-                    s.target.style.height = s.target.scrollHeight + "px";
-                  }}
-                  onPaste={(e) => {
-                    const items = e.clipboardData.items;
-
-                    for (let i = 0; i < items.length; i++) {
-                      const item = items[i];
-
-                      if (item.type.startsWith("image")) {
-                        const file = item.getAsFile();
-
-                        if (file) {
-                          setImage(file);
-
-                          const url = URL.createObjectURL(file);
-                          setPreview(url);
-                        }
-                      }
-                    }
-                  }}
-                  value={postMessage}
-                />
-              </div>
-              {preview && (
-                <>
-                  <div className="relative">
-                    <button
-                      className=" cursor-pointer absolute bg-black/50 p-1 top-2 right-2 rounded-full w-8 h-8 font-[E7E9EA] flex items-center justify-center"
-                      onClick={() => clearPostImage()}
-                    >
-                      X
-                    </button>
-                  </div>
-                  <img
-                    src={preview}
-                    alt="preview"
-                    className="mt-2 rounded-xl max-h-80 object-cover"
-                  />
-                  <div className="border-b border-stone-800 pb-4" />
-                </>
-              )}
-            </div>
-            <div className="flex justify-end mt-2">
-              <button
-                disabled={!validPost}
-                className={`text-black font-bold p-2 pr-4 pl-4 rounded-full transition-all duration-300 ${
-                  validPost
-                    ? "bg-[#E7E9EA] text-black hover:bg-[#cfcfcf] cursor-pointer"
-                    : "bg-stone-700 text-black opacity-50 cursor-not-allowed"
-                }
-              `}
-                onClick={handlePost}
-              >
-                Post
-              </button>
-            </div>
+        <div className="flex-1 flex flex-col bg-black h-screen overflow-y-auto no-scrollbar text-[#E7E9EA]">
+          <div className="border-b border-stone-800">
+            <button
+              className="hover:bg-stone-800 cursor-pointer p-3 flex items-center gap-5 rounded-full transition-colors duration-300"
+              onClick={() => navigate("/home")}>
+              <BackIcon className="fill-[#E7E9EA] w-8 h-8" />
+              <h2 className="text-xl">Results for "{q}"</h2>
+            </button>
           </div>
-          {Posts.map(
+          <div>
+            {Posts?.map(
             (
               post, // HERE HERE HERE HERE HERE HERE HERE HERE
             ) => {
               if (post.parent_post === null && post.retweet_post === null) {
                 const isLiked = actualUser
-                  ? post.likes.includes(actualUser.id)
+                  ? post.likes.includes(actualUser)
                   : false;
                 const isRetweeted = actualUser
-                  ? post.retweets.includes(actualUser.id)
+                  ? post.retweets.includes(actualUser)
                   : false;
                 return (
                   <div
@@ -470,7 +299,7 @@ export function Feed() {
                     key={post.id}
                     onClick={() => navigate(`/post/${post.id}`)}
                   >
-                    {actualUser?.id === post.author.id && (
+                    {actualUser === post.author.id && (
                       <button
                         className="font-white absolute h-8 w-8 flex items-center justify-center top-3 right-3 cursor-pointer hover:bg-stone-700 p-2 rounded-full transition-colors duration-300"
                         onClick={(e) => {
@@ -606,10 +435,10 @@ export function Feed() {
                 post.parent_post === null
               ) {
                 const isLiked = actualUser
-                  ? post.retweet_post?.likes.includes(actualUser.id)
+                  ? post.retweet_post?.likes.includes(actualUser)
                   : false;
                 const isRetweeted = actualUser
-                  ? post.retweet_post?.retweets.includes(actualUser.id)
+                  ? post.retweet_post?.retweets.includes(actualUser)
                   : false;
                 return (
                   <div
@@ -617,7 +446,7 @@ export function Feed() {
                     key={post.id}
                     onClick={() => navigate(`/post/${post.retweet_post?.id}`)}
                   >
-                    {actualUser?.id === post.author.id && (
+                    {actualUser === post.author.id && (
                       <button
                         className="font-white absolute h-8 w-8 flex items-center justify-center top-3 right-3 cursor-pointer hover:bg-stone-700 p-2 rounded-full transition-colors duration-300"
                         onClick={(e) => {
@@ -759,21 +588,22 @@ export function Feed() {
             },
           )}
         </div>
+        </div>
         {actualUser && accessToken && SelectedPost ? (
           <CommentInPost
             post={SelectedPost}
-            user={actualUser.id}
+            user={actualUser}
             token={accessToken}
           />
         ) : (
           false
         )}
         {/* right side */}
-        <div className="w-[420px] px-4 sticky top-0 h-screen overflow-y-auto">
+        <div className="w-[420px] px-4 border-l border-stone-800 sticky top-0 h-screen overflow-y-auto">
           <div className="top-0 pt-2">
-            <div className="bg-zinc-900 border border-stone-800 relative rounded-full px-4 py-2 focus-within:border-blue-500">
+            <div className="bg-zinc-900 border border-stone-800 rounded-full px-4 py-2 focus-within:border-blue-500 relative">
               <input
-                onClick={(e) => {
+              onClick={(e) => {
                   setSearching(true)
                   e.stopPropagation()
                 }}
@@ -782,8 +612,7 @@ export function Feed() {
                 type="text"
                 placeholder="Search"
                 className="bg-transparent outline-none w-full text-sm text-white placeholder-gray-400"
-                id="search-bar"
-              />  
+              />
               {
                 searching &&
                 <div className="p-2 flex flex-col absolute top-full bg-[#16181C] left-0 w-full flex rounded-xl shadow-[0_0_20px_4px_rgba(255,255,255,0.08)]">
@@ -792,12 +621,13 @@ export function Feed() {
                 </div>
               }
             </div>
+
             <div className="bg-zinc-900 border border-stone-800 rounded-xl mt-4 p-4">
               <h2 className="font-bold text-lg">What's happening</h2>
             </div>
           </div>
         </div>
       </div>
-    </div>
+  </div>
   );
-}
+};
