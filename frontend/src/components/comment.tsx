@@ -8,21 +8,23 @@ import type { PostProps } from "../types/postType";
 
 type Props = {
   post: PostProps;
-  user: ActualUser;
+  user: number;
   token: string;
 };
 
-type ActualUser = {
-  id: number;
-  name: string;
-  email: string;
-  username: string;
-  profile_image: string;
-  profile_banner: string;
+type user = {
   bio: string;
+  birthday: string;
+  email: string;
   followers_count: number;
   following_count: number;
-  birthday: string;
+  id: number;
+  name: string;
+  profile_banner: string;
+  profile_image: string;
+  username: string;
+  created_at: string;
+  is_following: boolean;
 };
 
 const api = axios.create({
@@ -64,6 +66,7 @@ export function CommentInPost({ post, user, token }: Props) {
   const [postComment, setpostComment] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [actualUser, setActualUser] = useState<user | null>(null)
 
   const validPost = postComment.length >= 1 && postComment.length <= 500;
   const setSelectedPost = useSelectedPostStore(
@@ -90,10 +93,18 @@ export function CommentInPost({ post, user, token }: Props) {
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
-
     return () => {
       document.body.style.overflow = "auto";
     };
+  }, []);
+  useEffect(() => {
+    const handleInit = async () => {
+      const response = await api.get(`/users/${user}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setActualUser(response.data);
+      }
+    handleInit()
   }, []);
 
   const handlePostComment = () => {
@@ -169,7 +180,7 @@ export function CommentInPost({ post, user, token }: Props) {
             <div>
               <div className="flex">
                 <img
-                  src={user.profile_image}
+                  src={actualUser?.profile_image}
                   alt="profile_picture"
                   className="rounded-full w-12 h-12 min-h-12 min-w-12 object-cover"
                 />

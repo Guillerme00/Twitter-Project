@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from django.db.models import Q
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = UserModel.objects.all()
@@ -108,6 +109,14 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.data,
             status=status.HTTP_200_OK
         )
+    
+    @action(detail=False, methods=["get"])
+    def search_users(self, request, pk=None):
+        q = request.query_params.get("q", "")
+        posts = UserModel.objects.filter(Q(username__icontains=q) | Q(name__icontains=q))[:20]
+        serializer = self.get_serializer(posts, many=True)
+
+        return Response(serializer.data)
     
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):

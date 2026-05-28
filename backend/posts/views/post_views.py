@@ -3,9 +3,9 @@ from posts.models import PostModel
 from rest_framework import status
 from posts.serializers import PostSerializer
 from rest_framework.response import Response
-from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.decorators import action
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = PostModel.objects.all()
@@ -78,4 +78,11 @@ class PostViewSet(viewsets.ModelViewSet):
                 return Response({"status": "retweeted"}, status=201)
         except ObjectDoesNotExist:
             return Response({"Error": "Retweet is not valid"}, status=404)
-            
+
+    @action(detail=False, methods=["get"])
+    def search_posts(self, request, pk=None):
+        q = request.query_params.get("q", "")
+        posts = PostModel.objects.filter(post_body__icontains=q)[:20]
+        serializer = self.get_serializer(posts, many=True)
+
+        return Response(serializer.data)

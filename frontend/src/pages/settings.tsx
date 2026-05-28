@@ -50,6 +50,8 @@ export const SettingsPage = () => {
     const logout = useAuthStore((state) => state.logout);
 
     const [deleting, setDeleting] = useState(false)
+    const [searching, setSearching] = useState(false);
+    const [searchField, setSearchField] = useState("");
 
 
 
@@ -72,7 +74,7 @@ export const SettingsPage = () => {
     }
 
   return (
-    <div className="bg-black h-screen text-[#E7E9EA] flex justify-center overflow-hidden">
+    <div className="bg-black h-screen text-[#E7E9EA] flex justify-center overflow-hidden"onClick={() => setSearching(false)}>
       <div className="flex w-full max-w-[1300px] mx-auto">
         {/* Left Side */}
         <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
@@ -125,12 +127,25 @@ export const SettingsPage = () => {
         {/* right side */}
         <div className="px-2 border-l border-stone-800 w-[420px] px-4 sticky top-0 h-screen overflow-y-auto">
           <div className="top-0 pt-2">
-            <div className="bg-zinc-900 border border-stone-800 rounded-full px-4 py-2 focus-within:border-blue-500">
+            <div className="bg-zinc-900 border border-stone-800 rounded-full px-4 py-2 focus-within:border-blue-500 relative">
               <input
+              onClick={(e) => {
+                  setSearching(true)
+                  e.stopPropagation()
+                }}
+                onChange={(e) => setSearchField(e.target.value)}
+                value={searchField}
                 type="text"
                 placeholder="Search"
                 className="bg-transparent outline-none w-full text-sm text-white placeholder-gray-400"
               />
+              {
+                searching &&
+                <div className="p-2 flex flex-col absolute top-full bg-[#16181C] left-0 w-full flex rounded-xl shadow-[0_0_20px_4px_rgba(255,255,255,0.08)]">
+                  <span className="p-1 font-bold hover:underline rounded-full cursor-pointer" onClick={() => navigate(`/users/search/?q=${searchField}`)}>Search "{searchField}" in Users</span>
+                  <span className="p-1 font-bold hover:underline rounded-full cursor-pointer" onClick={() => navigate(`/posts/search/?q=${searchField}`)}>Search "{searchField}" in Posts</span>
+                </div>
+              }
             </div>
 
             <div className="bg-zinc-900 border border-stone-800 rounded-xl mt-4 p-4">
