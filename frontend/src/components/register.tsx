@@ -1,7 +1,8 @@
 import { useState } from "react";
 import XIcon from "../assets/icons/x_logo.svg?react";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 
 export function Register() {
   //types
@@ -64,7 +65,7 @@ export function Register() {
   };
 
   const post_register = async (UserData: RegisterData): Promise<number> => {
-    const response = await axios.post(
+    const response = await api.post(
       "http://localhost:8000/api/users/",
       UserData,
     );

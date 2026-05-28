@@ -8,7 +8,7 @@ import RetweetIcon from "../assets/icons/retweet.svg?react";
 import ArrowIcon from "../assets/icons/arrow.svg?react";
 import DateIcon from "../assets/icons/date.svg?react";
 import BornIcon from "../assets/icons/born.svg?react";
-import axios from "axios";
+import { api } from "../services/api";
 
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -34,40 +34,6 @@ type user = {
   created_at: string;
   is_following: boolean;
 };
-
-const api = axios.create({
-  baseURL: "http://localhost:8000/api",
-  withCredentials: true,
-});
-
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const { setAccessToken } = useAuthStore.getState();
-        const res = await axios.post(
-          "http://localhost:8000/api/token/refresh/",
-          {},
-          { withCredentials: true },
-        );
-
-        setAccessToken(res.data.access);
-
-        originalRequest.headers["Authorization"] = `Bearer ${res.data.access}`;
-
-        return api(originalRequest);
-      } catch (err) {
-        console.log(err);
-      }
-    }
-    return Promise.reject(error);
-  },
-);
 
 export const MeProfile = () => {
   const { id } = useParams();

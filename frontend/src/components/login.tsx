@@ -1,8 +1,9 @@
 import { useState } from "react";
 import XIcon from "../assets/icons/x_logo.svg?react";
-import axios, { type AxiosResponse } from "axios";
+import { type AxiosResponse } from "axios";
 import { useAuthStore } from "../store/AuthStore";
 import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 
 export function Login() {
   //types
@@ -61,7 +62,7 @@ export function Login() {
   const post_login = async (
     UserData: loginData,
   ): Promise<AxiosResponse<TokenResponse>> => {
-    const response = await axios.post<TokenResponse>(
+    const response = await api.post<TokenResponse>(
       "http://localhost:8000/api/token/",
       UserData,
       {
@@ -82,7 +83,7 @@ export function Login() {
     };
     try {
       const response = await post_login(user);
-      const userInfos = await axios.get<UserData>(
+      const userInfos = await api.get<UserData>(
         "http://localhost:8000/api/users/me/",
         {
           headers: {

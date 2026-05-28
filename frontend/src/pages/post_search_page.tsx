@@ -1,4 +1,4 @@
-import axios from "axios";
+import { api } from "../services/api";
 import BackIcon from "../assets/icons/arrow.svg?react";
 import HomeIcon from "../assets/icons/home.svg?react";
 import MeIcon from "../assets/icons/me.svg?react";
@@ -14,40 +14,6 @@ import { useEffect, useState } from "react";
 import { CommentInPost } from "../components/comment";
 import type { PostProps } from "../types/postType";
 import { useSelectedPostStore } from "../store/SelectedPostStore";
-
-const api = axios.create({
-  baseURL: "http://localhost:8000/api",
-  withCredentials: true,
-});
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const { setAccessToken } = useAuthStore.getState();
-        const res = await axios.post(
-          "http://localhost:8000/api/token/refresh/",
-          {},
-          { withCredentials: true },
-        );
-
-        setAccessToken(res.data.access);
-
-        originalRequest.headers["Authorization"] = `Bearer ${res.data.access}`;
-
-        return api(originalRequest);
-      } catch (err) {
-        console.log(err);
-      }
-    }
-
-    return Promise.reject(error);
-  },
-);
 
 export const SearchPostPage = () => {
   const [searchParams] = useSearchParams();

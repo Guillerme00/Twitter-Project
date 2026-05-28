@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["twitter-project-production.up.railway.app"]
 
 
 # Application definition
@@ -149,6 +149,7 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://twitter-project-woad.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
