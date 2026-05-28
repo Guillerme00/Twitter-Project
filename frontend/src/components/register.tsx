@@ -65,8 +65,7 @@ export function Register() {
   };
 
   const post_register = async (UserData: RegisterData): Promise<number> => {
-    const response = await api.post(
-      "http://localhost:8000/api/users/",
+    const response = await api.post("/users/",
       UserData,
     );
     return response.status;

@@ -277,8 +277,8 @@ export const MeProfile = () => {
 
   const getImageUrl = (url: string) => {
     if (url.startsWith("http")) return url;
-    return `http://localhost:8000${url}`;
-  };
+    return `https://twitter-project-production.up.railway.app${url}`;
+};
 
   const CalcTemp = (created_at: string) => {
     const now = new Date();
