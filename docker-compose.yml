@@ -1,8 +1,20 @@
-
 services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: twitter
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
   web:
     build: ./backend
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/twitter
+    depends_on:
+      - db
