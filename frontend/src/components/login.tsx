@@ -63,7 +63,7 @@ export function Login() {
     UserData: loginData,
   ): Promise<AxiosResponse<TokenResponse>> => {
     const response = await api.post<TokenResponse>(
-      "/api/token/",
+      "/token/",
       UserData,
       {
         withCredentials: true
@@ -84,7 +84,7 @@ export function Login() {
     try {
       const response = await post_login(user);
       const userInfos = await api.get<UserData>(
-        "/api/users/me/",
+        "/users/me/",
         {
           headers: {
             Authorization: `Bearer ${response.data.access}`,
