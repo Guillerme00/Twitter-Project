@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from posts.models import PostModel
-from posts.serializers import FeedSerializer
+from posts.serializers import PostSerializer
 
 class FeedView(APIView):
     permission_classes = [IsAuthenticated]
@@ -36,7 +36,7 @@ class FeedView(APIView):
                 {"error": "Not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
-        serializer = FeedSerializer(posts, many=True, context={"request": request})
+        serializer = PostSerializer(posts, many=True, context={"request": request})
         return Response(
             serializer.data,
             status=status.HTTP_200_OK

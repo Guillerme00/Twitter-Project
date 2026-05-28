@@ -69,12 +69,13 @@ export function Feed() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const SelectedPost = useSelectedPostStore((state) => state.selectedPost);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
-  const setSelectedPost = useSelectedPostStore((state) => state.setSelectedPost,);
+  const setSelectedPost = useSelectedPostStore(
+    (state) => state.setSelectedPost,
+  );
   const navigate = useNavigate();
 
-
   const [searchParams] = useSearchParams();
-  const feedType = searchParams.get("feed")
+  const feedType = searchParams.get("feed");
   const isFollowingFeed = feedType === "following";
 
   //states
@@ -144,13 +145,18 @@ export function Feed() {
           token = res.data.access;
           setAccessToken(res.data.access);
         }
-        
-        const response = await api.get("/posts/",
-        {
-          params: {feed: isFollowingFeed ? "following" : "for_you"},
+
+        const response = await api.get("/feed/", {
+          params: { feed: isFollowingFeed ? "following" : "for_you" },
           headers: { Authorization: `Bearer ${token}` },
         });
-        setPosts(response.data.results);
+        if (isFollowingFeed) {
+          setPosts(response.data);
+          console.log(response.data);
+        } else {
+          setPosts(response.data);
+          console.log(response.data);
+        }
 
         const actual_user_response = await api.get("/users/me/", {
           headers: { Authorization: `Bearer ${token}` },
@@ -163,7 +169,7 @@ export function Feed() {
     };
 
     handleInit();
-  }, [accessToken, navigate, setAccessToken, isFollowingFeed ]);
+  }, [accessToken, navigate, setAccessToken, isFollowingFeed]);
 
   useEffect(() => {
     if (SelectedPost === null) {
@@ -344,17 +350,37 @@ export function Feed() {
 
         {/* mid side */}
         <div className="border-r border-stone-800 flex-1 w-full max-w-[800px] overflow-y-auto no-scrollbar h-screen">
-          <div className="grid grid-cols-2 border-b border-stone-800">
-            <div className="p-4 cursor-pointer font-bold text-center hover:bg-stone-900">
-              <div className="inline-block">
+          {isFollowingFeed ? (
+            <div className="grid grid-cols-2 border-b border-stone-800">
+              <div
+                className="p-4 cursor-pointer text-stone-500 font-bold text-center hover:bg-stone-900"
+                onClick={() => navigate("/home")}
+              >
                 For you
-                <div className="h-1 bg-blue-400 rounded-full mt-1" />
+              </div>
+              <div className="p-4 cursor-pointer font-bold text-center hover:bg-stone-900">
+                <div className="inline-block">
+                  Following
+                  <div className="h-1 bg-blue-400 rounded-full mt-1" />
+                </div>
               </div>
             </div>
-            <div className="p-4 cursor-pointer text-stone-500 font-bold text-center hover:bg-stone-900">
-              Following
+          ) : (
+            <div className="grid grid-cols-2 border-b border-stone-800">
+              <div className="p-4 cursor-pointer font-bold text-center hover:bg-stone-900">
+                <div className="inline-block">
+                  For you
+                  <div className="h-1 bg-blue-400 rounded-full mt-1" />
+                </div>
+              </div>
+              <div
+                className="p-4 cursor-pointer text-stone-500 font-bold text-center hover:bg-stone-900"
+                onClick={() => navigate("/home?feed=following")}
+              >
+                Following
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex flex-col p-4 border-b border-stone-800">
             <div className="flex flex-col">
