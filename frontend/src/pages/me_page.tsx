@@ -104,7 +104,7 @@ export const MeProfile = () => {
 
   const follow = () => {
     try {
-      api.post(`users/${profileOwner?.id}/follow/`, {
+      api.post(`users/${profileOwner?.id}/follow/`,{}, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
     } catch (err) {
@@ -113,7 +113,7 @@ export const MeProfile = () => {
   };
   const unfollow = () => {
     try {
-      api.post(`users/${profileOwner?.id}/unfollow/`, {
+      api.post(`users/${profileOwner?.id}/unfollow/`,{}, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
     } catch (err) {
