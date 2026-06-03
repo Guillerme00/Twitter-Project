@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AddPhoto from "../assets/icons/addphoto2.svg?react";
 
 type editProps = {
@@ -29,6 +30,96 @@ export const EditProfile = ({
   setProfileBannerFile,
   setProfileImageFile,
 }: editProps) => {
+
+  const [passValid, setPassValid] = useState("untouched");
+  const [pass2Valid, setPass2Valid] = useState("untouched");
+
+  const [pass1, setPass1] = useState("");
+  const [pass2, setPass2] = useState("");
+
+  const [passwordtest1, setPasswordtest1] = useState(false);
+  const [passwordtest2, setPasswordtest2] = useState(false);
+  const [passwordtest3, setPasswordtest3] = useState(false);
+  const [passwordtest4, setPasswordtest4] = useState(false);
+  const [passwordtest5, setPasswordtest5] = useState(false);
+  const [passwordVerified, setPasswordVerified] = useState(false);
+
+  const set_pass1 = (password: string): void => {
+    setPass1(password);
+  };
+
+  const set_pass2 = (password: string): void => {
+    setPass2(password);
+  };
+
+  const password_match = pass1 === pass2;
+
+  const pass2isvalid = (password1: string, password2: string): void => {
+    if (password1 == password2) {
+      setPass2Valid("valid");
+      return;
+    }
+    setPass2Valid("invalid");
+  };
+  const validUsername = (username: string): void => {
+    if (username.length >= 4 && username.length <= 16) {
+      setUsernameValid("valid");
+      return;
+    }
+    setUsernameValid("invalid");
+  };
+
+  const validEmail = (email: string): void => {
+    if (/@/.test(email)) {
+      setEmailValid("valid");
+      return;
+    }
+    setEmailValid("invalid");
+  };
+
+  const hasNumber = (pass1: string): boolean => {
+    const response = /[0-9]/.test(pass1);
+    return response;
+  };
+  const hasLower = (pass1: string): boolean => {
+    const response = /[a-z]/.test(pass1);
+    return response;
+  };
+  const hasUpper = (pass1: string): boolean => {
+    const response = /[A-Z]/.test(pass1);
+    return response;
+  };
+  const hasSpecial = (pass1: string): boolean => {
+    const response = /[!@#$%&*]/.test(pass1);
+    return response;
+  };
+  const verifyQuantity = (pass1: string): boolean => {
+    if (pass1.length >= 8 && pass1.length <= 20) {
+      return true;
+    }
+    return false;
+  };
+  const verify_password = (pass1: string): void => {
+    const number = hasNumber(pass1);
+    const lower = hasLower(pass1);
+    const upper = hasUpper(pass1);
+    const special = hasSpecial(pass1);
+    const quantity = verifyQuantity(pass1);
+
+    setPasswordtest1(number);
+    setPasswordtest2(lower);
+    setPasswordtest3(upper);
+    setPasswordtest4(special);
+    setPasswordtest5(quantity);
+
+    if (number && lower && upper && special && quantity) {
+      setPasswordVerified(true);
+      setPassValid("valid");
+      return;
+    }
+    setPassValid("invalid");
+    setPasswordVerified(false);
+  };
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
       <div className="max-w-[640px] flex flex-col w-full rounded-sm bg-[#0b0b0b] flex p-4">
@@ -128,6 +219,72 @@ export const EditProfile = ({
             className="bg-transparent outline-none text-3xl font-bold w-full"
           />
         </div>
+        <input
+            value={pass1}
+            onChange={(e) => {
+              set_pass1(e.target.value);
+              verify_password(e.target.value);
+              pass2isvalid(e.target.value, pass2);
+            }}
+            required
+            type="password"
+            name="password"
+            placeholder="New Password"
+            autoComplete="new-password"
+            className="text-white placeholder-stone-700 p-4 mt-4 text-[20px] mb-1 border-stone-700 border-2 rounded-xs w-full"
+          />
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest1 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have at least a number
+            </h2>
+          )}
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest2 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have at least a lower letter
+            </h2>
+          )}
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest3 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have at least a upper letter
+            </h2>
+          )}
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest4 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have at least a special character
+            </h2>
+          )}
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest5 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have between 8 and 20 characters
+            </h2>
+          )}
+
+          <input
+            value={pass2}
+            onChange={(e) => {
+              set_pass2(e.target.value);
+              pass2isvalid(pass1, e.target.value);
+            }}
+            required
+            type="password"
+            name="confirm_password"
+            placeholder="Confirm Password"
+            autoComplete="new-password"
+            className="text-white placeholder-stone-700 p-4 mt-4 text-[20px] mb-1 border-stone-700 border-2 rounded-xs w-full"
+          />
+          {pass2Valid === "invalid" && (
+            <h1 className="text-red-500">Error, password do not match</h1>
+          )}
       </div>
     </div>
   );
