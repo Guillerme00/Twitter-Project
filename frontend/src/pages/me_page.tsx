@@ -114,7 +114,7 @@ export const MeProfile = () => {
       setShowingInvalid(false);
       }
       else if (newPasswordValid === "valid") {
-        formData.append("new_password", newPassword);
+        formData.append("password", newPassword);
         setShowingInvalid(false);
       }
       else {
