@@ -8,6 +8,8 @@ type editProps = {
   setName: React.Dispatch<React.SetStateAction<string>>;
   bio: string;
   setBio: React.Dispatch<React.SetStateAction<string>>;
+  setNewPassword: React.Dispatch<React.SetStateAction<string>>;
+  setNewPasswordValid: React.Dispatch<React.SetStateAction<string>>;
   profile_image: string;
   profile_banner: string;
   setProfileBanner: React.Dispatch<React.SetStateAction<string>>;
@@ -29,8 +31,11 @@ export const EditProfile = ({
   setProfileImage,
   setProfileBannerFile,
   setProfileImageFile,
+  setNewPassword,
+  setNewPasswordValid
 }: editProps) => {
 
+  
   const [passValid, setPassValid] = useState("untouched");
   const [pass2Valid, setPass2Valid] = useState("untouched");
 
@@ -42,7 +47,6 @@ export const EditProfile = ({
   const [passwordtest3, setPasswordtest3] = useState(false);
   const [passwordtest4, setPasswordtest4] = useState(false);
   const [passwordtest5, setPasswordtest5] = useState(false);
-  const [passwordVerified, setPasswordVerified] = useState(false);
 
   const set_pass1 = (password: string): void => {
     setPass1(password);
@@ -60,21 +64,6 @@ export const EditProfile = ({
       return;
     }
     setPass2Valid("invalid");
-  };
-  const validUsername = (username: string): void => {
-    if (username.length >= 4 && username.length <= 16) {
-      setUsernameValid("valid");
-      return;
-    }
-    setUsernameValid("invalid");
-  };
-
-  const validEmail = (email: string): void => {
-    if (/@/.test(email)) {
-      setEmailValid("valid");
-      return;
-    }
-    setEmailValid("invalid");
   };
 
   const hasNumber = (pass1: string): boolean => {
@@ -112,17 +101,17 @@ export const EditProfile = ({
     setPasswordtest4(special);
     setPasswordtest5(quantity);
 
-    if (number && lower && upper && special && quantity) {
-      setPasswordVerified(true);
-      setPassValid("valid");
+    if (number && lower && upper && special && quantity && password_match) {
+      setPassValid("valid")
+      setNewPasswordValid("valid");
       return;
     }
     setPassValid("invalid");
-    setPasswordVerified(false);
+    setNewPasswordValid("invalid");
   };
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
-      <div className="max-w-[640px] flex flex-col w-full rounded-sm bg-[#0b0b0b] flex p-4">
+      <div className="max-w-[640px] w-full max-h-[90vh] overflow-y-auto rounded-sm bg-[#0b0b0b] p-4 no-scrollbar">
         <div className="flex justify-between items-center w-full h-12">
           <div className="flex items-center">
             <button
@@ -200,7 +189,6 @@ export const EditProfile = ({
           </div>
           <div className="border border-stone-700 rounded-md ml-4 px-3 py-2 bg-[#0b0b0b] flex-1">
             <p className="text-stone-500 text-sm">Name</p>
-
             <input
               value={name}
               type="text"
@@ -211,7 +199,6 @@ export const EditProfile = ({
         </div>
         <div className="border border-stone-700 rounded-md ml-4 px-3 py-2 bg-[#0b0b0b] flex-1 mt-4">
           <p className="text-stone-500 text-sm">Bio</p>
-
           <input
             value={bio}
             onChange={(e) => setBio(e.target.value)}
@@ -219,72 +206,73 @@ export const EditProfile = ({
             className="bg-transparent outline-none text-3xl font-bold w-full"
           />
         </div>
-        <input
-            value={pass1}
-            onChange={(e) => {
-              set_pass1(e.target.value);
-              verify_password(e.target.value);
-              pass2isvalid(e.target.value, pass2);
-            }}
-            required
-            type="password"
-            name="password"
-            placeholder="New Password"
-            autoComplete="new-password"
-            className="text-white placeholder-stone-700 p-4 mt-4 text-[20px] mb-1 border-stone-700 border-2 rounded-xs w-full"
-          />
-          {passValid === "invalid" && (
-            <h2
-              className={`${passwordtest1 ? "text-green-500" : "text-red-500"} mb-4`}
-            >
-              Password must have at least a number
-            </h2>
-          )}
-          {passValid === "invalid" && (
-            <h2
-              className={`${passwordtest2 ? "text-green-500" : "text-red-500"} mb-4`}
-            >
-              Password must have at least a lower letter
-            </h2>
-          )}
-          {passValid === "invalid" && (
-            <h2
-              className={`${passwordtest3 ? "text-green-500" : "text-red-500"} mb-4`}
-            >
-              Password must have at least a upper letter
-            </h2>
-          )}
-          {passValid === "invalid" && (
-            <h2
-              className={`${passwordtest4 ? "text-green-500" : "text-red-500"} mb-4`}
-            >
-              Password must have at least a special character
-            </h2>
-          )}
-          {passValid === "invalid" && (
-            <h2
-              className={`${passwordtest5 ? "text-green-500" : "text-red-500"} mb-4`}
-            >
-              Password must have between 8 and 20 characters
-            </h2>
-          )}
-
+        <div className="border border-stone-700 rounded-md ml-4 px-3 py-2 bg-[#0b0b0b] flex-1 mt-4">
+          <p className="text-stone-500 text-sm">New Password (optional)</p>
+          <input
+              value={pass1}
+              onChange={(e) => {
+                set_pass1(e.target.value);
+                verify_password(e.target.value);
+                pass2isvalid(e.target.value, pass2);
+                setNewPassword(e.target.value)
+              }}
+              type="password"
+              name="password"
+              className="bg-transparent outline-none text-3xl font-bold w-full"
+            />
+            {passValid === "invalid" && (
+              <h2
+                className={`${passwordtest1 ? "text-green-500" : "text-red-500"} mb-4`}
+              >
+                Password must have at least a number
+              </h2>
+            )}
+            {passValid === "invalid" && (
+              <h2
+                className={`${passwordtest2 ? "text-green-500" : "text-red-500"} mb-4`}
+              >
+                Password must have at least a lower letter
+              </h2>
+            )}
+            {passValid === "invalid" && (
+              <h2
+                className={`${passwordtest3 ? "text-green-500" : "text-red-500"} mb-4`}
+              >
+                Password must have at least a upper letter
+              </h2>
+            )}
+            {passValid === "invalid" && (
+              <h2
+                className={`${passwordtest4 ? "text-green-500" : "text-red-500"} mb-4`}
+              >
+                Password must have at least a special character
+              </h2>
+            )}
+            {passValid === "invalid" && (
+              <h2
+                className={`${passwordtest5 ? "text-green-500" : "text-red-500"} mb-4`}
+              >
+                Password must have between 8 and 20 characters
+              </h2>
+            )}
+        </div>
+        <div className="border border-stone-700 rounded-md ml-4 px-3 py-2 bg-[#0b0b0b] flex-1 mt-4">
+          <p className="text-stone-500 text-sm">Confirm Password</p>
           <input
             value={pass2}
             onChange={(e) => {
               set_pass2(e.target.value);
               pass2isvalid(pass1, e.target.value);
+              verify_password(pass1);
             }}
-            required
             type="password"
-            name="confirm_password"
-            placeholder="Confirm Password"
             autoComplete="new-password"
-            className="text-white placeholder-stone-700 p-4 mt-4 text-[20px] mb-1 border-stone-700 border-2 rounded-xs w-full"
+            className="bg-transparent outline-none text-3xl font-bold w-full"
           />
           {pass2Valid === "invalid" && (
             <h1 className="text-red-500">Error, password do not match</h1>
           )}
+        </div>
       </div>
     </div>
   );
