@@ -32,10 +32,8 @@ export const EditProfile = ({
   setProfileBannerFile,
   setProfileImageFile,
   setNewPassword,
-  setNewPasswordValid
+  setNewPasswordValid,
 }: editProps) => {
-
-  
   const [passValid, setPassValid] = useState("untouched");
   const [pass2Valid, setPass2Valid] = useState("untouched");
 
@@ -56,14 +54,15 @@ export const EditProfile = ({
     setPass2(password);
   };
 
-  const password_match = pass1 === pass2;
-
   const pass2isvalid = (password1: string, password2: string): void => {
-    if (password1 == password2) {
+    if (password1 === password2) {
       setPass2Valid("valid");
+      setNewPasswordValid("valid");
       return;
     }
+
     setPass2Valid("invalid");
+    setNewPasswordValid("invalid");
   };
 
   const hasNumber = (pass1: string): boolean => {
@@ -88,12 +87,13 @@ export const EditProfile = ({
     }
     return false;
   };
-  const verify_password = (pass1: string): void => {
-    const number = hasNumber(pass1);
-    const lower = hasLower(pass1);
-    const upper = hasUpper(pass1);
-    const special = hasSpecial(pass1);
-    const quantity = verifyQuantity(pass1);
+
+  const verify_password = (password: string): void => {
+    const number = hasNumber(password);
+    const lower = hasLower(password);
+    const upper = hasUpper(password);
+    const special = hasSpecial(password);
+    const quantity = verifyQuantity(password);
 
     setPasswordtest1(number);
     setPasswordtest2(lower);
@@ -101,11 +101,11 @@ export const EditProfile = ({
     setPasswordtest4(special);
     setPasswordtest5(quantity);
 
-    if (number && lower && upper && special && quantity && password_match) {
-      setPassValid("valid")
-      setNewPasswordValid("valid");
+    if (number && lower && upper && special && quantity) {
+      setPassValid("valid");
       return;
     }
+
     setPassValid("invalid");
     setNewPasswordValid("invalid");
   };
@@ -209,61 +209,65 @@ export const EditProfile = ({
         <div className="border border-stone-700 rounded-md ml-4 px-3 py-2 bg-[#0b0b0b] flex-1 mt-4">
           <p className="text-stone-500 text-sm">New Password (optional)</p>
           <input
-              value={pass1}
-              onChange={(e) => {
-                set_pass1(e.target.value);
-                verify_password(e.target.value);
-                pass2isvalid(e.target.value, pass2);
-                setNewPassword(e.target.value)
-              }}
-              type="password"
-              name="password"
-              className="bg-transparent outline-none text-3xl font-bold w-full"
-            />
-            {passValid === "invalid" && (
-              <h2
-                className={`${passwordtest1 ? "text-green-500" : "text-red-500"} mb-4`}
-              >
-                Password must have at least a number
-              </h2>
-            )}
-            {passValid === "invalid" && (
-              <h2
-                className={`${passwordtest2 ? "text-green-500" : "text-red-500"} mb-4`}
-              >
-                Password must have at least a lower letter
-              </h2>
-            )}
-            {passValid === "invalid" && (
-              <h2
-                className={`${passwordtest3 ? "text-green-500" : "text-red-500"} mb-4`}
-              >
-                Password must have at least a upper letter
-              </h2>
-            )}
-            {passValid === "invalid" && (
-              <h2
-                className={`${passwordtest4 ? "text-green-500" : "text-red-500"} mb-4`}
-              >
-                Password must have at least a special character
-              </h2>
-            )}
-            {passValid === "invalid" && (
-              <h2
-                className={`${passwordtest5 ? "text-green-500" : "text-red-500"} mb-4`}
-              >
-                Password must have between 8 and 20 characters
-              </h2>
-            )}
+            value={pass1}
+            onChange={(e) => {
+              const value = e.target.value;
+
+              set_pass1(value);
+              verify_password(value);
+              pass2isvalid(value, pass2);
+              setNewPassword(value);
+            }}
+            type="password"
+            name="password"
+            autoComplete="new-password"
+            className="bg-transparent outline-none text-3xl font-bold w-full"
+          />
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest1 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have at least a number
+            </h2>
+          )}
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest2 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have at least a lower letter
+            </h2>
+          )}
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest3 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have at least a upper letter
+            </h2>
+          )}
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest4 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have at least a special character
+            </h2>
+          )}
+          {passValid === "invalid" && (
+            <h2
+              className={`${passwordtest5 ? "text-green-500" : "text-red-500"} mb-4`}
+            >
+              Password must have between 8 and 20 characters
+            </h2>
+          )}
         </div>
         <div className="border border-stone-700 rounded-md ml-4 px-3 py-2 bg-[#0b0b0b] flex-1 mt-4">
           <p className="text-stone-500 text-sm">Confirm Password</p>
           <input
             value={pass2}
             onChange={(e) => {
-              set_pass2(e.target.value);
-              pass2isvalid(pass1, e.target.value);
-              verify_password(pass1);
+              const value = e.target.value;
+
+              set_pass2(value);
+              pass2isvalid(pass1, value);
             }}
             type="password"
             autoComplete="new-password"
