@@ -62,18 +62,29 @@ export const MeProfile = () => {
   const navigate = useNavigate();
 
   const [profileOwner, setProfileOwner] = useState<user | null>(null);
-  const [userPosts, setUserPosts] = useState<PostProps[] | null>(null);
   const [actualUser, setActualUser] = useState<user | null>(null);
+
+  const [userPosts, setUserPosts] = useState<PostProps[] | null>(null);
+
   const [openedPostMenu, setOpenedPostMenu] = useState<number | null>(null);
+
   const [editProfile, setEditProfile] = useState(false);
   const [edited, setEdited] = useState(false);
+
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordValid, setNewPasswordValid] = useState("untouched");
+
   const [profileBanner, setProfileBanner] = useState("");
   const [profileImage, setProfileImage] = useState("");
+
   const [profileBannerFile, setProfileBannerFile] = useState<File | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+
   const [following, setFollowing] = useState(false);
+
   const [searching, setSearching] = useState(false);
   const [searchField, setSearchField] = useState("");
 
@@ -92,6 +103,17 @@ export const MeProfile = () => {
       }
       if (profileImageFile) {
         formData.append("profile_image", profileImageFile);
+      }
+      if (newPassword === "") {
+        setNewPasswordValid("untouched");
+      }
+      if (newPassword === "") {
+        setNewPasswordValid("untouched");
+      } else if (newPasswordValid === "valid") {
+        formData.append("password", newPassword);
+      } else {
+        alert("Password Invalid! No Updated!");
+        return;
       }
       api.patch(`users/${profileOwner?.id}/`, formData, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -447,6 +469,8 @@ export const MeProfile = () => {
                   name={name}
                   profile_banner={profileBanner}
                   profile_image={profileImage}
+                  setNewPassword={setNewPassword}
+                  setNewPasswordValid={setNewPasswordValid}
                   setBio={setBio}
                   setName={setName}
                   setProfileBanner={setProfileBanner}
