@@ -70,14 +70,12 @@ export const MeProfile = () => {
 
   const [editProfile, setEditProfile] = useState(false);
   const [edited, setEdited] = useState(false);
-  
+
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
 
-
-  const [newPassword, setNewPassword] = useState("")
-  const [newPasswordValid, setNewPasswordValid] = useState("untouched")
-  const [showingInvalid, setShowingInvalid] = useState(false)
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordValid, setNewPasswordValid] = useState("untouched");
 
   const [profileBanner, setProfileBanner] = useState("");
   const [profileImage, setProfileImage] = useState("");
@@ -107,25 +105,20 @@ export const MeProfile = () => {
         formData.append("profile_image", profileImageFile);
       }
       if (newPassword === "") {
-        setNewPasswordValid("untouched")
+        setNewPasswordValid("untouched");
       }
       if (newPassword === "") {
-      setNewPasswordValid("untouched");
-      setShowingInvalid(false);
-      }
-      else if (newPasswordValid === "valid") {
+        setNewPasswordValid("untouched");
+      } else if (newPasswordValid === "valid") {
         formData.append("password", newPassword);
-        setShowingInvalid(false);
-      }
-      else {
-        setShowingInvalid(true);
+      } else {
+        alert("Password Invalid! No Updated!");
+        return;
       }
       api.patch(`users/${profileOwner?.id}/`, formData, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setEditProfile((prev) => !prev);
-
-
     } catch (err) {
       console.log(err);
     }
