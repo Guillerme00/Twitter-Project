@@ -133,18 +133,28 @@ export const MeProfile = () => {
 
   const follow = () => {
     try {
-      api.post(`users/${profileOwner?.id}/follow/`,{}, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      api.post(
+        `users/${profileOwner?.id}/follow/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+      );
+      setFollowing((prev) => !prev);
     } catch (err) {
       console.log(err);
     }
   };
   const unfollow = () => {
     try {
-      api.post(`users/${profileOwner?.id}/unfollow/`,{}, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      api.post(
+        `users/${profileOwner?.id}/unfollow/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+      );
+      setFollowing((prev) => !prev);
     } catch (err) {
       console.log(err);
     }
@@ -307,7 +317,7 @@ export const MeProfile = () => {
   const getImageUrl = (url: string) => {
     if (url.startsWith("http")) return url;
     return `https://twitter-project-production.up.railway.app${url}`;
-};
+  };
 
   const CalcTemp = (created_at: string) => {
     const now = new Date();
@@ -366,8 +376,10 @@ export const MeProfile = () => {
 
   return (
     <>
-      {showingInvalid && alert("Password Invalid! No Updated!")}
-      <div className="bg-black h-screen text-[#E7E9EA] flex justify-center"onClick={() => setSearching(false)}>
+      <div
+        className="bg-black h-screen text-[#E7E9EA] flex justify-center"
+        onClick={() => setSearching(false)}
+      >
         <div className="flex w-full max-w-[1300px] overflow-hidden">
           {/* Left Side */}
           <div className="w-[275px] px-2 border-r border-stone-800 sticky top-0 h-screen">
@@ -476,16 +488,18 @@ export const MeProfile = () => {
               )}
             </div>
             <div className="flex justify-between pb-4 ml-4 mr-4 mt-4 text-stone-500">
-              <div className="flex items-center cursor-pointer hover:underline"
-              onClick={() => navigate(`/profile/${id}/followers`)}
+              <div
+                className="flex items-center cursor-pointer hover:underline"
+                onClick={() => navigate(`/profile/${id}/followers`)}
               >
                 <span className="text-[#E7E9EA] mr-1">
                   {profileOwner?.followers_count}
                 </span>
                 <span>Followers</span>
               </div>
-              <div className="flex items-center cursor-pointer hover:underline"
-              onClick={() => navigate(`/profile/${id}/following`)}
+              <div
+                className="flex items-center cursor-pointer hover:underline"
+                onClick={() => navigate(`/profile/${id}/following`)}
               >
                 <span className="text-[#E7E9EA] mr-1">
                   {profileOwner?.following_count}
@@ -828,23 +842,36 @@ export const MeProfile = () => {
             <div className="top-0 pt-2">
               <div className="bg-zinc-900 border border-stone-800 rounded-full px-4 py-2 focus-within:border-blue-500 relative">
                 <input
-                onClick={(e) => {
-                  setSearching(true)
-                  e.stopPropagation()
-                }}
-                onChange={(e) => setSearchField(e.target.value)}
-                value={searchField}
+                  onClick={(e) => {
+                    setSearching(true);
+                    e.stopPropagation();
+                  }}
+                  onChange={(e) => setSearchField(e.target.value)}
+                  value={searchField}
                   type="text"
                   placeholder="Search"
                   className="bg-transparent outline-none w-full text-sm text-white placeholder-gray-400"
                 />
-                {
-                searching &&
-                <div className="p-2 flex flex-col absolute top-full bg-[#16181C] left-0 w-full flex rounded-xl shadow-[0_0_20px_4px_rgba(255,255,255,0.08)]">
-                  <span className="p-1 font-bold hover:underline rounded-full cursor-pointer" onClick={() => navigate(`/users/search/?q=${searchField}`)}>Search "{searchField}" in Users</span>
-                  <span className="p-1 font-bold hover:underline rounded-full cursor-pointer" onClick={() => navigate(`/posts/search/?q=${searchField}`)}>Search "{searchField}" in Posts</span>
-                </div>
-              }
+                {searching && (
+                  <div className="p-2 flex flex-col absolute top-full bg-[#16181C] left-0 w-full flex rounded-xl shadow-[0_0_20px_4px_rgba(255,255,255,0.08)]">
+                    <span
+                      className="p-1 font-bold hover:underline rounded-full cursor-pointer"
+                      onClick={() =>
+                        navigate(`/users/search/?q=${searchField}`)
+                      }
+                    >
+                      Search "{searchField}" in Users
+                    </span>
+                    <span
+                      className="p-1 font-bold hover:underline rounded-full cursor-pointer"
+                      onClick={() =>
+                        navigate(`/posts/search/?q=${searchField}`)
+                      }
+                    >
+                      Search "{searchField}" in Posts
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="bg-zinc-900 border border-stone-800 rounded-xl mt-4 p-4">
